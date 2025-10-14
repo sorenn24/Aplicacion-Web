@@ -1,7 +1,14 @@
 codigos de la pagina web
+Home
 CSS del Home: ./home.css
 Tailwind : https://cdn.tailwindcss.com
 Logo: ../logo.png
 JS del Home: ./home.js
 Link a Login: ../login/index.html
 Link a Dashboard: ../dashboard/dashboard.html
+DASHBOARD
+CSS del Dashboard: ./dashboard.css
+JS del Dashboard: ./dashboard.js
+Tailwind : https://cdn.tailwindcss.com
+Logo: ../img/logo.PNG
+(Dentro de dashboard.js) ruta al login (logout/protección): const LOGIN_PATH = "../login_separated/index.html";
