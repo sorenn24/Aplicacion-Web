@@ -1,1 +1,7 @@
 codigos de la pagina web
+CSS del Home: ./home.css
+Tailwind : https://cdn.tailwindcss.com
+Logo: ../logo.png
+JS del Home: ./home.js
+Link a Login: ../login/index.html
+Link a Dashboard: ../dashboard/dashboard.html
