@@ -1,1 +1,60 @@
+body {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
 
+/* ==========================
+   BOTONES PERSONALIZADOS
+   ========================== */
+.btn-terapeuta, .btn-paciente {
+  display: inline-block;
+  padding: 0.75rem 2.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+/* Botón Terapeuta */
+.btn-terapeuta {
+  background: linear-gradient(90deg, #ffffff, #e0e7ff);
+  color: #4f46e5;
+}
+
+.btn-terapeuta:hover {
+  background: linear-gradient(90deg, #f8fafc, #c7d2fe);
+  transform: translateY(-2px);
+}
+
+/* Botón Paciente */
+.btn-paciente {
+  background: linear-gradient(90deg, #22d3ee, #38bdf8);
+  color: #1f2937;
+}
+
+.btn-paciente:hover {
+  background: linear-gradient(90deg, #67e8f9, #3b82f6);
+  transform: translateY(-2px);
+}
+
+/* ==========================
+   ANIMACIONES
+   ========================== */
+.fade-in {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 1.2s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
