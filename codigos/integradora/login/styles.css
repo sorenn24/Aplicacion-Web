@@ -1,0 +1,67 @@
+body {
+            box-sizing: border-box;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-minimal {
+            border: 1px solid #e5e7eb;
+            transition: border-color 0.2s ease;
+        }
+        
+        .card-minimal:hover {
+            border-color: #d1d5db;
+        }
+        
+        .exercise-card {
+            transition: all 0.2s ease;
+        }
+        
+        .exercise-card:hover {
+            transform: translateY(-1px);
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+        
+        .notification {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .minimal-button {
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        
+        .minimal-button:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        
+        .minimal-input {
+            border: 1px solid #e5e7eb;
+            transition: border-color 0.2s ease;
+        }
+        
+        .minimal-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }

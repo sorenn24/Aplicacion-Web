@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediHom - Rehabilitación Física Digital (Login)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="bg-gray-50 font-sans">
+  <!-- Pantalla de Login -->
+  <div id="loginScreen" class="min-h-screen gradient-bg flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg border border-gray-200 p-8 w-full max-w-md">
+      <div class="text-center mb-8">
+        <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-light text-gray-800 mb-2">MediHom</h1>
+        <p class="text-gray-500 text-sm">Rehabilitación Física Digital</p>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-2">Correo Electrónico</label>
+          <input type="email" id="loginEmail" required class="w-full px-3 py-2 minimal-input rounded-md">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-2">Contraseña</label>
+          <input type="password" id="loginPassword" required class="w-full px-3 py-2 minimal-input rounded-md">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition duration-200">
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        <button id="showRegister" class="text-blue-600 hover:text-blue-800 text-sm">
+          ¿No tienes cuenta? Regístrate aquí
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla de Registro -->
+  <div id="registerScreen" class="min-h-screen gradient-bg flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-lg border border-gray-200 p-8 w-full max-w-md">
+      <div class="text-center mb-8">
+        <h2 class="text-xl font-light text-gray-800 mb-2">Crear Cuenta</h2>
+        <p class="text-gray-500 text-sm">Únete a MediHom</p>
+      </div>
+
+      <form id="registerForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-2">Nombre Completo</label>
+          <input type="text" id="registerName" required class="w-full px-3 py-2 minimal-input rounded-md">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-2">Correo Electrónico</label>
+          <input type="email" id="registerEmail" required class="w-full px-3 py-2 minimal-input rounded-md">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-2">Contraseña</label>
+          <input type="password" id="registerPassword" required class="w-full px-3 py-2 minimal-input rounded-md">
+        </div>
+        <input type="hidden" id="registerRole" value="patient">
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 transition duration-200">
+          Crear Cuenta
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        <button id="showLogin" class="text-blue-600 hover:text-blue-800 text-sm">
+          ¿Ya tienes cuenta? Inicia sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notificaciones -->
+  <div id="notifications" class="fixed top-4 right-4 space-y-2 z-50"></div>
+
+  <!-- Tu lógica existente de login -->
+  <script src="./app.js" defer></script>
+</body>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        // Rutas ABSOLUTAS a la carpeta del proyecto:
+        const reg = await navigator.serviceWorker.register('/integradora/serviceWorker.js', {
+          scope: '/integradora/'
+        });
+        console.log('✅ Service Worker registrado con scope:', reg.scope);
+      } catch (err) {
+        console.error('❌ Error al registrar el Service Worker:', err);
+      }
+    });
+  }
+</script>
+
+
+
+
+</html>
