@@ -400,78 +400,393 @@
   </div>
 
   <!-- RUTINAS DE REHABILITACIÓN EN HTML -->
-  <script id="rehabRoutines" type="application/json">
+ <script id="rehabRoutines" type="application/json">
 [
   {
-    "id": "rtn-espalda-lumbar-suave",
-    "name": "Espalda (lumbar) — Movilidad suave",
-    "category": "Espalda",
+    "id": "rtn-knee-basic",
+    "name": "Rehabilitación de Rodilla — Básica",
+    "category": "Piernas",
     "difficulty": "Principiante",
     "duration": 18,
-    "description": "Disminuir rigidez lumbar y mejorar control lumbopélvico.",
+    "description": "Rutina básica para control y fortalecimiento suave de rodilla.",
     "days": [
-      { "name": "Basculación pélvica en supino", "reps": "3×10", "duration": 6,
-        "instructions": ["Rodillas flexionadas", "Retroversión pélvica", "Respira profundo"] },
-      { "name": "Puente glúteo asistido", "reps": "3×10", "duration": 6,
-        "instructions": ["Eleva cadera sin dolor", "Mantén 2s", "Desciende controlado"] },
-      { "name": "Gato–camello", "reps": "3×8", "duration": 6,
-        "instructions": ["Movimiento lento", "Evita dolor agudo", "Sin rebotes"] }
+      {
+        "name": "Flexión y extensión asistida",
+        "reps": "10 rep x 3 series",
+        "duration": 6,
+        "instructions": [
+          "Sentado, estira la rodilla",
+          "Mantén 2–3 s",
+          "Regresa despacio"
+        ]
+      },
+      {
+        "name": "Elevación de pierna recta",
+        "reps": "10 rep x 3 series",
+        "duration": 6,
+        "instructions": [
+          "Pierna recta",
+          "Eleva 45°",
+          "Mantén 3 s"
+        ]
+      },
+      {
+        "name": "Cuádriceps isométrico",
+        "reps": "12 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Aprieta cuádriceps",
+          "Mantén 5 s"
+        ]
+      }
     ],
     "ownerId": null
   },
   {
-    "id": "rtn-cuello-descarga",
-    "name": "Cuello — Descarga cervical",
+    "id": "rtn-neck-basic",
+    "name": "Rehabilitación de Cuello",
     "category": "Cuello",
     "difficulty": "Intermedio",
     "duration": 15,
-    "description": "Reducir tensión cervical y mejorar movilidad sin dolor.",
+    "description": "Rutina para reducir tensión cervical y mejorar movilidad sin dolor.",
     "days": [
-      { "name": "Inclinaciones laterales activas", "reps": "3×8 por lado", "duration": 5,
-        "instructions": ["Rango sin dolor", "Hombros relajados", "Tempo lento"] },
-      { "name": "Rotaciones controladas", "reps": "3×8 por lado", "duration": 5,
-        "instructions": ["Mirada al frente", "Evita mareo"] },
-      { "name": "Isometría cervical suave (mano–frente)", "reps": "3×20s", "duration": 5,
-        "instructions": ["Presión 20–30%", "No contener la respiración"] }
+      {
+        "name": "Inclinaciones laterales",
+        "reps": "10 rep por lado",
+        "duration": 5,
+        "instructions": [
+          "Inclina hacia el hombro",
+          "Mantén 5 s"
+        ]
+      },
+      {
+        "name": "Rotaciones controladas",
+        "reps": "10 rep por lado",
+        "duration": 5,
+        "instructions": [
+          "Gira suave",
+          "No forzar rango"
+        ]
+      },
+      {
+        "name": "Retracciones cervicales",
+        "reps": "10 rep",
+        "duration": 5,
+        "instructions": [
+          "Barbilla atrás",
+          "Mantén 3 s"
+        ]
+      }
     ],
     "ownerId": null
   },
   {
-    "id": "rtn-rodilla-control",
-    "name": "Rodilla — Control y fortalecimiento leve",
-    "category": "Piernas",
+    "id": "rtn-elbow-basic",
+    "name": "Rehabilitación de Codo",
+    "category": "Brazos",
     "difficulty": "Principiante",
-    "duration": 15,
-    "description": "Activación de cuádriceps y control sin impacto.",
+    "duration": 18,
+    "description": "Rutina para movilidad y control del codo con carga baja.",
     "days": [
-      { "name": "Cuádriceps isométrico en extensión", "reps": "5×15s", "duration": 5,
-        "instructions": ["Toalla bajo rodilla", "Contracción suave", "Sin dolor"] },
-      { "name": "Elevación de pierna recta", "reps": "3×10", "duration": 5,
-        "instructions": ["Rodilla extendida", "Sube 30–40°", "Controlado"] },
-      { "name": "Mini-sentadilla a silla", "reps": "3×8", "duration": 5,
-        "instructions": ["Apoyo en silla", "Rodillas alineadas", "Peso repartido"] }
+      {
+        "name": "Flexo-extensión",
+        "reps": "15 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Flexiona y extiende",
+          "Movimiento suave"
+        ]
+      },
+      {
+        "name": "Pronosupinación",
+        "reps": "10 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Usa objeto ligero",
+          "Palma arriba/abajo"
+        ]
+      },
+      {
+        "name": "Agarre isométrico",
+        "reps": "10 rep",
+        "duration": 6,
+        "instructions": [
+          "Aprieta suave",
+          "Mantén 5 s"
+        ]
+      }
     ],
     "ownerId": null
   },
   {
-    "id": "rtn-hombro-escapular",
-    "name": "Hombro — Estabilidad escapular",
+    "id": "rtn-shoulder-basic",
+    "name": "Rehabilitación de Hombro",
     "category": "Brazos",
     "difficulty": "Intermedio",
     "duration": 18,
-    "description": "Mejorar control escapular y rango sin dolor.",
+    "description": "Rutina para mejorar control y estabilidad del hombro.",
     "days": [
-      { "name": "Retracción escapular en pared", "reps": "3×10", "duration": 6,
-        "instructions": ["Espalda a la pared", "Hombros abajo y atrás"] },
-      { "name": "Deslizamientos tipo ‘ángel’", "reps": "3×8", "duration": 6,
-        "instructions": ["Codos y muñecas a la pared", "Sube/baja controlado"] },
-      { "name": "Rotación externa con banda", "reps": "3×12", "duration": 6,
-        "instructions": ["Codo pegado al cuerpo", "Resistencia leve", "Sin compensaciones"] }
+      {
+        "name": "Elevaciones frontales",
+        "reps": "10 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Lleva brazos al frente",
+          "Controla el descenso"
+        ]
+      },
+      {
+        "name": "Rotación externa con banda",
+        "reps": "12 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Codo pegado al cuerpo",
+          "Gira hacia afuera"
+        ]
+      },
+      {
+        "name": "Péndulo",
+        "reps": "1 min por sentido",
+        "duration": 6,
+        "instructions": [
+          "Inclínate hacia adelante",
+          "Balancea suave el brazo"
+        ]
+      }
+    ],
+    "ownerId": null
+  },
+  {
+    "id": "rtn-lowerback-basic",
+    "name": "Rehabilitación de Espalda Baja",
+    "category": "Espalda",
+    "difficulty": "Principiante",
+    "duration": 18,
+    "description": "Rutina para disminuir rigidez lumbar y activar glúteo/core.",
+    "days": [
+      {
+        "name": "Rodillas al pecho",
+        "reps": "20 s · 5x",
+        "duration": 6,
+        "instructions": [
+          "Boca arriba",
+          "Lleva rodillas al pecho"
+        ]
+      },
+      {
+        "name": "Gato/Camello",
+        "reps": "10 rep x 2",
+        "duration": 6,
+        "instructions": [
+          "En 4 puntos",
+          "Flexiona y extiende columna"
+        ]
+      },
+      {
+        "name": "Puente glúteo",
+        "reps": "12 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Activa core y glúteo",
+          "Eleva pelvis"
+        ]
+      }
+    ],
+    "ownerId": null
+  },
+  {
+    "id": "rtn-abs-therapeutic",
+    "name": "Abdominal Terapéutico",
+    "category": "General",
+    "difficulty": "Intermedio",
+    "duration": 18,
+    "description": "Rutina enfocada en la activación del transverso y control del core.",
+    "days": [
+      {
+        "name": "Activación transverso",
+        "reps": "Mantén 10 s x 5",
+        "duration": 6,
+        "instructions": [
+          "Inhala profundo",
+          "Contrae suave el abdomen"
+        ]
+      },
+      {
+        "name": "Dead bug controlado",
+        "reps": "10 rep por lado",
+        "duration": 6,
+        "instructions": [
+          "Brazos y piernas arriba",
+          "Alterna brazos/piernas"
+        ]
+      },
+      {
+        "name": "Plancha modificada",
+        "reps": "3 x 20 s",
+        "duration": 6,
+        "instructions": [
+          "Apoya rodillas",
+          "Mantén columna neutra"
+        ]
+      }
+    ],
+    "ownerId": null
+  },
+  {
+    "id": "rtn-hip-basic",
+    "name": "Rehabilitación de Cadera",
+    "category": "Piernas",
+    "difficulty": "Intermedio",
+    "duration": 18,
+    "description": "Rutina para control y fuerza de cadera en plano lateral.",
+    "days": [
+      {
+        "name": "Abducción lateral",
+        "reps": "12 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Acostado de lado",
+          "Eleva la pierna superior"
+        ]
+      },
+      {
+        "name": "Puente a una pierna",
+        "reps": "10 rep por lado",
+        "duration": 6,
+        "instructions": [
+          "Eleva pelvis",
+          "Alterna pierna de apoyo"
+        ]
+      },
+      {
+        "name": "Paso lateral con banda",
+        "reps": "3 x 10 m",
+        "duration": 6,
+        "instructions": [
+          "Banda a nivel de tobillos",
+          "Da pasos laterales"
+        ]
+      }
+    ],
+    "ownerId": null
+  },
+  {
+    "id": "rtn-ankle-basic",
+    "name": "Rehabilitación de Tobillo",
+    "category": "Piernas",
+    "difficulty": "Principiante",
+    "duration": 18,
+    "description": "Rutina para control y movilidad de tobillo tras lesión leve.",
+    "days": [
+      {
+        "name": "Abecedario con pie",
+        "reps": "A–Z x 2",
+        "duration": 6,
+        "instructions": [
+          "Traza letras con el pie",
+          "Movimiento suave"
+        ]
+      },
+      {
+        "name": "Elevación de talones",
+        "reps": "15 rep x 3",
+        "duration": 6,
+        "instructions": [
+          "Ponte de puntillas",
+          "Sostén 1 s antes de bajar"
+        ]
+      },
+      {
+        "name": "Inversión/Eversión con banda",
+        "reps": "10 rep x 2",
+        "duration": 6,
+        "instructions": [
+          "Coloca banda en el pie",
+          "Mueve hacia adentro y afuera"
+        ]
+      }
+    ],
+    "ownerId": null
+  },
+  {
+    "id": "rtn-wrist-basic",
+    "name": "Muñeca y Antebrazo",
+    "category": "Brazos",
+    "difficulty": "Intermedio",
+    "duration": 18,
+    "description": "Rutina para fuerza y flexibilidad de muñeca y antebrazo.",
+    "days": [
+      {
+        "name": "Flex/Ext con mancuerna",
+        "reps": "12 rep x 2",
+        "duration": 6,
+        "instructions": [
+          "Antebrazo apoyado",
+          "Solo mueve la muñeca"
+        ]
+      },
+      {
+        "name": "Pronosupinación con martillo",
+        "reps": "10 rep x 2",
+        "duration": 6,
+        "instructions": [
+          "Sujeta martillo",
+          "Gira la muñeca"
+        ]
+      },
+      {
+        "name": "Estiramiento flexor/extensor",
+        "reps": "20 s cada lado",
+        "duration": 6,
+        "instructions": [
+          "Extiende el brazo",
+          "Tira suave de la mano"
+        ]
+      }
+    ],
+    "ownerId": null
+  },
+  {
+    "id": "rtn-thoracic-mobility",
+    "name": "Movilidad Torácica",
+    "category": "Espalda",
+    "difficulty": "Intermedio",
+    "duration": 18,
+    "description": "Rutina para mejorar movilidad torácica y postura.",
+    "days": [
+      {
+        "name": "Rotación en cuadrupedia",
+        "reps": "10 rep c/lado",
+        "duration": 6,
+        "instructions": [
+          "En 4 puntos",
+          "Lleva el codo hacia el techo"
+        ]
+      },
+      {
+        "name": "Extensión sobre foam roller",
+        "reps": "10 rep",
+        "duration": 6,
+        "instructions": [
+          "Foam bajo zona torácica",
+          "Extiende suavemente"
+        ]
+      },
+      {
+        "name": "Aperturas de libro",
+        "reps": "10 rep c/lado",
+        "duration": 6,
+        "instructions": [
+          "Acostado de lado",
+          "Abre el brazo hacia atrás"
+        ]
+      }
     ],
     "ownerId": null
   }
 ]
-  </script>
+</script>
+
 
   <script src="./dashboard.js" defer></script>
 </body>
