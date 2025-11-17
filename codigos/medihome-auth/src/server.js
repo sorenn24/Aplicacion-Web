@@ -36,8 +36,9 @@ const limiter = rateLimit({
 app.use("/api/auth", limiter);
 
 // ===================== SERVIR FRONTEND (carpeta integradora) =====================
-// Ruta absoluta a /integradora (está como hermana de /src)
-const publicPath = path.join(__dirname, "..", "integradora");
+
+// Ruta absoluta a /codigos/integradora
+const publicPath = path.join(__dirname, "..", "..", "integradora");
 
 // Servir todos los archivos estáticos (HTML, CSS, JS, imágenes…)
 app.use("/integradora", express.static(publicPath));
@@ -81,3 +82,4 @@ connectDB(process.env.MONGODB_URI)
     console.error("Error de conexión:", err);
     process.exit(1);
   });
+
