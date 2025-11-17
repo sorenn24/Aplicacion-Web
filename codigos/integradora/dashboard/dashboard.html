@@ -794,9 +794,8 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        // Rutas ABSOLUTAS a la carpeta del proyecto:
-        const reg = await navigator.serviceWorker.register('/integradora/serviceWorker.js', {
-          scope: '/integradora/'
+        const reg = await navigator.serviceWorker.register('/serviceWorker.js', {
+          scope: '/'
         });
         console.log('✅ Service Worker registrado con scope:', reg.scope);
       } catch (err) {
@@ -805,7 +804,6 @@
     });
   }
 </script>
-
 
 
 </html>
