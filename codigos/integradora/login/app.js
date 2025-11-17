@@ -5,7 +5,8 @@
   const $ = (sel) => document.querySelector(sel);
 
   // ===== API base =====
-  const API_URL = "http://localhost:4000/api/auth"; // ajusta si usas otro puerto/origen
+  // ⬇⬇⬇ AHORA usando tu backend en Render
+  const API_URL = "https://medihom-web.onrender.com/api/auth";
   const STORAGE_CURRENT = "currentUser";
   const STORAGE_TOKEN = "auth_token";
 
@@ -50,7 +51,7 @@
     return typeof pw === "string" && pw.length >= 6;
   }
 
-  // ===== UI: toggle entre Login y Registro (igual que tu versión) =====
+  // ===== UI: toggle entre Login y Registro =====
   function showLogin() {
     $("#loginScreen")?.classList.remove("hidden");
     $("#registerScreen")?.classList.add("hidden");
@@ -60,7 +61,7 @@
     $("#loginScreen")?.classList.add("hidden");
   }
 
-  // ===== Handlers (ahora contra la API) =====
+  // ===== Handlers (ahora contra la API en Render) =====
   async function onLoginSubmit(e) {
     e.preventDefault();
     const email = $("#loginEmail")?.value.trim();
@@ -73,6 +74,7 @@
       const res = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // credentials: "include", // si luego usas cookies httpOnly
         body: JSON.stringify({ email, password })
       });
       const data = await res.json().catch(() => ({}));
@@ -81,11 +83,13 @@
       }
 
       // Guardar token y usuario
-      setToken(data.token);
-      setCurrentUser(data.user);
+      if (data.token) setToken(data.token);
+      if (data.user) setCurrentUser(data.user);
 
       notify("Ingreso exitoso", "success");
-      window.location.href = "../dashboard/dashboard.html";
+
+      // ⬇⬇⬇ redirigir al dashboard del Static Site
+      window.location.href = "../dashboard/index.html";
     } catch (err) {
       console.error(err);
       notify("No se pudo conectar con el servidor", "error");
@@ -107,6 +111,7 @@
       const res = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // credentials: "include",
         body: JSON.stringify({ name, email, password, role })
       });
       const data = await res.json().catch(() => ({}));
@@ -118,12 +123,13 @@
         );
       }
 
-      // Guardar token y usuario
-      setToken(data.token);
-      setCurrentUser(data.user);
+      if (data.token) setToken(data.token);
+      if (data.user) setCurrentUser(data.user);
 
       notify("Cuenta creada", "success");
-      window.location.href = "../dashboard/dashboard.html";
+
+      // ➜ Después de registrarse, llévalo directo al dashboard
+      window.location.href = "../dashboard/index.html";
     } catch (err) {
       console.error(err);
       notify("No se pudo conectar con el servidor", "error");
@@ -142,9 +148,10 @@
     // si ya hay sesión, ir directo al dashboard
     const current = getCurrentUser();
     if (current?.email && getToken()) {
-      window.location.href = "../dashboard/dashboard.html";
+      window.location.href = "../dashboard/index.html";
       return;
     }
     bindEvents();
   });
 })();
+
