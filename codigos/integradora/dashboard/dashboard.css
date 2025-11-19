@@ -1,27 +1,32 @@
+/* ==========================================
+   ESTILO UNIFICADO PARA MEDIHOM (Dashboard)
+   Inspirado en la paleta del Home
+   ========================================== */
 
 body {
     box-sizing: border-box;
-    background: #f8fafc;
+    background: #f1f5f9; /* gris azulado clarito */
     scroll-behavior: smooth;
 }
 
-/* Fondo en secciones importantes */
+/* Fondo de secciones con gradient tipo Home */
 .gradient-bg {
-    background: linear-gradient(135deg, #38bdf8 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, #22d3ee 0%, #4f46e5 100%);
 }
 
-/* Tarjetas limpias y modernas */
+/* Tarjetas */
 .card-minimal {
     border: 1px solid #e2e8f0;
     background: #ffffff;
     border-radius: 0.75rem;
     transition: all 0.25s ease;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
 .card-minimal:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2);
+    border-color: #38bdf8;
+    box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35);
+    transform: translateY(-2px);
 }
 
 /* Cards de ejercicios */
@@ -34,31 +39,32 @@ body {
 }
 
 .exercise-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
 }
 
 /* Barra de progreso */
 .progress-bar {
-    background: linear-gradient(90deg, #38bdf8, #3b82f6);
+    background: linear-gradient(90deg, #22d3ee, #3b82f6);
     height: 8px;
-    border-radius: 10px;
+    border-radius: 999px;
     transition: width 0.4s ease;
 }
 
-/* Botones minimalistas */
+/* Botones tipo minimal pero en gama azul */
 .minimal-button {
     border: 1px solid #e5e7eb;
     background: #ffffff;
     padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
     transition: all 0.25s ease;
 }
 
 .minimal-button:hover {
     border-color: #38bdf8;
     background-color: #ecfeff;
-    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.25);
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
 }
 
 /* Inputs */
@@ -70,18 +76,18 @@ body {
 }
 
 .minimal-input:focus {
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 1px #38bdf8;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
     outline: none;
 }
 
 /* Notificaciones */
 .notification {
     animation: slideIn 0.3s ease;
-    background: linear-gradient(90deg, #3b82f6, #38bdf8);
+    background: linear-gradient(90deg, #3b82f6, #22d3ee);
     color: white;
     padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
 }
 
 /* Animación */
@@ -90,13 +96,13 @@ body {
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* Gráfica */
+/* Contenedor de gráfica */
 .chart-container {
     position: relative;
     height: 300px;
 }
 
-/* Oculto */
+/* Utilidad */
 .hidden {
     display: none !important;
 }
