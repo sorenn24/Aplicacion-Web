@@ -129,7 +129,7 @@
       notify("Cuenta creada", "success");
 
       // ➜ Después de registrarse, llévalo directo al dashboard
-      window.location.href = "../dashboard/index.html";
+      window.location.href = "../dashboard/dashboard.html";
     } catch (err) {
       console.error(err);
       notify("No se pudo conectar con el servidor", "error");
