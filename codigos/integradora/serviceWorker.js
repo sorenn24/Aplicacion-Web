@@ -6,21 +6,21 @@ const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 // Páginas y archivos 
 const PRECACHE_URLS = [
                      
-  "/integradora/index.html",
-  "/integradora/offline.html",
+  "/index.html",
+  "/offline.html",
 
-  "/integradora/home/home.css",
-  "/integradora/home/home.js",
-  "/integradora/home/logo.png",
-  "/integradora/home/manifest.json",
+  "/home/home.css",
+  "/home/home.js",
+  "/home/logo.png",
+  "/home/manifest.json",
 
-  "/integradora/login/index.html",
-  "/integradora/login/app.js",
-  "/integradora/login/styles.css",
+  "/login/index.html",
+  "/login/app.js",
+  "/login/styles.css",
 
-  "/integradora/dashboard/dashboard.html",
-  "/integradora/dashboard/dashboard.js",
-  "/integradora/dashboard/dashboard.css"
+  "/dashboard/dashboard.html",
+  "/dashboard/dashboard.js",
+  "/dashboard/dashboard.css"
 ];
 
 //  Endpoints de autenticación que no deben cachearse
@@ -101,3 +101,4 @@ async function staleWhileRevalidate(req) {
     .catch(() => null);
   return cached || fetchPromise;
 }
+
