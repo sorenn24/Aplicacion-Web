@@ -12,6 +12,7 @@ const authRoutes = require("./routes/auth.routes");
 const { auth } = require("./middleware/auth");
 
 const app = express();
+app.set("trust proxy", 1);
 
 // ===================== Seguridad / middlewares =====================
 app.use(helmet());
@@ -82,4 +83,5 @@ connectDB(process.env.MONGODB_URI)
     console.error("Error de conexión:", err);
     process.exit(1);
   });
+
 
