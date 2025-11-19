@@ -1,67 +1,108 @@
+/* ==========================================
+   ESTILO UNIFICADO PARA MEDIHOM (Dashboard)
+   Inspirado en la paleta del Home
+   ========================================== */
+
 body {
-            box-sizing: border-box;
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .card-minimal {
-            border: 1px solid #e5e7eb;
-            transition: border-color 0.2s ease;
-        }
-        
-        .card-minimal:hover {
-            border-color: #d1d5db;
-        }
-        
-        .exercise-card {
-            transition: all 0.2s ease;
-        }
-        
-        .exercise-card:hover {
-            transform: translateY(-1px);
-        }
-        
-        .progress-bar {
-            transition: width 0.5s ease;
-        }
-        
-        .notification {
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
-        
-        .minimal-button {
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-        
-        .minimal-button:hover {
-            border-color: #3b82f6;
-            background-color: #f8fafc;
-        }
-        
-        .minimal-input {
-            border: 1px solid #e5e7eb;
-            transition: border-color 0.2s ease;
-        }
-        
-        .minimal-input:focus {
-            border-color: #3b82f6;
-            outline: none;
-            box-shadow: 0 0 0 1px #3b82f6;
-        }
+    box-sizing: border-box;
+    background: #f1f5f9; /* gris azulado clarito */
+    scroll-behavior: smooth;
+}
+
+/* Fondo de secciones con gradient tipo Home */
+.gradient-bg {
+    background: linear-gradient(135deg, #22d3ee 0%, #4f46e5 100%);
+}
+
+/* Tarjetas */
+.card-minimal {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 0.75rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.card-minimal:hover {
+    border-color: #38bdf8;
+    box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35);
+    transform: translateY(-2px);
+}
+
+/* Cards de ejercicios */
+.exercise-card {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.exercise-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
+}
+
+/* Barra de progreso */
+.progress-bar {
+    background: linear-gradient(90deg, #22d3ee, #3b82f6);
+    height: 8px;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+/* Botones tipo minimal pero en gama azul */
+.minimal-button {
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+.minimal-button:hover {
+    border-color: #38bdf8;
+    background-color: #ecfeff;
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+}
+
+/* Inputs */
+.minimal-input {
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.minimal-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+    outline: none;
+}
+
+/* Notificaciones */
+.notification {
+    animation: slideIn 0.3s ease;
+    background: linear-gradient(90deg, #3b82f6, #22d3ee);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+}
+
+/* Animación */
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Contenedor de gráfica */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* Utilidad */
+.hidden {
+    display: none !important;
+}
