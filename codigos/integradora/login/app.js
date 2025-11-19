@@ -89,7 +89,7 @@
       notify("Ingreso exitoso", "success");
 
       // ⬇⬇⬇ redirigir al dashboard del Static Site
-      window.location.href = "../dashboard/index.html";
+      window.location.href = "../dashboard/dashboard.html";
     } catch (err) {
       console.error(err);
       notify("No se pudo conectar con el servidor", "error");
@@ -148,7 +148,7 @@
     // si ya hay sesión, ir directo al dashboard
     const current = getCurrentUser();
     if (current?.email && getToken()) {
-      window.location.href = "../dashboard/index.html";
+      window.location.href = "../dashboard/dashboard.html";
       return;
     }
     bindEvents();
