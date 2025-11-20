@@ -1,3 +1,4 @@
+// src/server.js
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
@@ -10,7 +11,7 @@ const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const { auth } = require("./middleware/auth");
-const routinesRoutes = require("./routes/routines.routes"); // 🆕 NUEVAS RUTAS
+const routinesRoutes = require("./routes/routines.routes"); // 🆕 Rutas de rutinas/progreso
 
 const app = express();
 
@@ -23,8 +24,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS
-// En desarrollo: usa CLIENT_ORIGIN=http://127.0.0.1:5500
-// En Render: puedes dejar CLIENT_ORIGIN vacío y esto permite todos (seguro para tu entrega)
+// En desarrollo: CLIENT_ORIGIN=http://127.0.0.1:5500
+// En Render: normalmente se deja vacío y se permite el mismo host
 app.use(
   cors({
     origin: process.env.CLIENT_ORIGIN || true,
@@ -52,6 +53,11 @@ app.get("/", (_req, res) => {
   res.sendFile(path.join(publicPath, "login", "index.html"));
 });
 
+// (Opcional) home landing
+app.get("/home", (_req, res) => {
+  res.sendFile(path.join(publicPath, "home", "index.html"));
+});
+
 // ===================== RUTAS API =====================
 
 // Salud
@@ -65,8 +71,8 @@ app.get("/api/auth/me", auth(), (req, res) => {
   res.json({ user: req.user });
 });
 
-// 3) Rutas de rutinas y progreso (MongoDB) 🆕
-app.use("/api/routines", routinesRoutes);
+// 3) Rutas de rutinas y progreso (MongoDB) — PROTEGIDAS con JWT
+app.use("/api/routines", auth(), routinesRoutes);
 
 // ===================== INICIAR SERVIDOR =====================
 const port = process.env.PORT || 4000;
@@ -89,6 +95,4 @@ connectDB(process.env.MONGODB_URI)
     console.error("Error de conexión:", err);
     process.exit(1);
   });
-
-
 
