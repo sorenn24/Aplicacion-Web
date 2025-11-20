@@ -596,5 +596,59 @@
   });
 })();
 
+    $("#completeExercise")?.addEventListener("click", async () => {
+      const scr = $("#exerciseScreen");
+      const rid = scr?.dataset.routineId;
+      const day = parseInt(scr?.dataset.dayIndex || "0", 10);
+      if (!rid) {
+        $("#exerciseScreen")?.classList.add("hidden");
+        return;
+      }
+      try {
+        await apiCompleteDay(rid, day);
+        $("#exerciseScreen")?.classList.add("hidden");
+        await renderPatientRoutines(currentUser);
+        await refreshProgressDashboard(currentUser);
+        notify("¡Ejercicio completado!", "success");
+      } catch (err) {
+        console.error(err);
+        notify("No se pudo guardar el progreso", "error");
+      }
+    });
+  }
+
+  // ================= Init =================
+  let currentUser = null;
+  document.addEventListener("DOMContentLoaded", async () => {
+    currentUser = requireSession();
+    if (!currentUser) return;
+
+    const welcome = $("#userWelcome");
+    if (welcome)
+      welcome.textContent = currentUser.name
+        ? `Hola, ${currentUser.name}`
+        : currentUser.email || "";
+
+    const role = (currentUser.role || "patient").toLowerCase();
+    buildTabs(role);
+    wireCommon(currentUser);
+
+    if (role === "patient") {
+      setupSelectRoutine(currentUser);
+      await renderPatientRoutines(currentUser);
+      await refreshProgressDashboard(currentUser);
+    } else if (role === "therapist") {
+      // aquí podrías conectar el panel de terapeuta a la API si quieres
+    }
+
+    notify(
+      `Sesión iniciada como ${
+        role === "patient" ? "Paciente" : "Terapeuta"
+      }`,
+      "success"
+    );
+  });
+})();
+
 
 
