@@ -6,10 +6,12 @@
   const $  = (s, ctx = document) => ctx.querySelector(s);
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
-  // ========= API base =========
-  // Usamos rutas relativas para que funcione en local y en Render
-  const API_AUTH     = "/api/auth";
-  const API_ROUTINES = "/api/routines";
+ // ========= API base =========
+// BACKEND hospedado en Render (Node + Mongo)
+const API_BASE     = "https://medihom-web.onrender.com";
+const API_AUTH     = `${API_BASE}/api/auth`;
+const API_ROUTINES = `${API_BASE}/api/routines`;
+
 
   const STORAGE_CURRENT = "currentUser";
   const STORAGE_TOKEN   = "auth_token";
