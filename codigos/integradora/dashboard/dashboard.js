@@ -534,7 +534,7 @@ const API_ROUTINES = `${API_BASE}/api/routines`;
       localStorage.removeItem(STORAGE_CURRENT);
       localStorage.removeItem(STORAGE_TOKEN);
       notify("Sesión cerrada", "success");
-      setTimeout(() => (window.location.href = "/integradora/index.html"), 200);
+      setTimeout(() => (window.location.href = "/login/index.html"), 200);
     });
 
     $("#closeDetailsBtn")?.addEventListener("click", () =>
@@ -573,7 +573,7 @@ const API_ROUTINES = `${API_BASE}/api/routines`;
   document.addEventListener("DOMContentLoaded", async () => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      window.location.href = "/integradora/index.html";
+      window.location.href = "/login/index.html";
       return;
     }
 
