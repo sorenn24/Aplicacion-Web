@@ -10,8 +10,11 @@ const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const { auth } = require("./middleware/auth");
+const routinesRoutes = require("./routes/routines.routes"); // 🆕 NUEVAS RUTAS
 
 const app = express();
+
+// Para que Render/Proxy no rompa el rate-limit ni las IPs
 app.set("trust proxy", 1);
 
 // ===================== Seguridad / middlewares =====================
@@ -20,7 +23,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS
-// En desarrollo: usa CLIENT_ORIGIN= http://127.0.0.1:5500
+// En desarrollo: usa CLIENT_ORIGIN=http://127.0.0.1:5500
 // En Render: puedes dejar CLIENT_ORIGIN vacío y esto permite todos (seguro para tu entrega)
 app.use(
   cors({
@@ -38,7 +41,7 @@ app.use("/api/auth", limiter);
 
 // ===================== SERVIR FRONTEND (carpeta integradora) =====================
 
-// Ruta absoluta a /codigos/integradora
+// Ruta absoluta a /codigos/integradora (hermana de /medihome-auth)
 const publicPath = path.join(__dirname, "..", "..", "integradora");
 
 // Servir todos los archivos estáticos (HTML, CSS, JS, imágenes…)
@@ -62,6 +65,9 @@ app.get("/api/auth/me", auth(), (req, res) => {
   res.json({ user: req.user });
 });
 
+// 3) Rutas de rutinas y progreso (MongoDB) 🆕
+app.use("/api/routines", routinesRoutes);
+
 // ===================== INICIAR SERVIDOR =====================
 const port = process.env.PORT || 4000;
 
@@ -83,5 +89,6 @@ connectDB(process.env.MONGODB_URI)
     console.error("Error de conexión:", err);
     process.exit(1);
   });
+
 
 
