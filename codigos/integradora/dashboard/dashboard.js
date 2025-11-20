@@ -1,4 +1,4 @@
-// dashboard.js — Paciente + Terapeuta usando API (MongoDB)
+// dashboard.js — paciente + terapeuta usando API en Render (MongoDB)
 (function () {
   "use strict";
 
@@ -71,35 +71,16 @@
     return text ? JSON.parse(text) : null;
   }
 
-  // ================= Helpers para adaptar la forma de los datos =================
-  /** Devuelve la rutina “pura” aunque venga anidada en .routine */
-  function asRoutine(obj) {
-    // si viene como { routine: {...} }
-    if (obj && obj.routine && typeof obj.routine === "object") return obj.routine;
-    // si viene como { routineId, routine: 'id' } podrías adaptar aquí si quieres
-    return obj || {};
-  }
-
-  /** Devuelve el id real de la rutina aunque venga anidada */
-  function routineIdFrom(obj) {
-    if (!obj) return undefined;
-    if (obj.routine && typeof obj.routine === "object") {
-      return obj.routine._id || obj.routine.id;
-    }
-    return obj._id || obj.id || obj.routineId;
-  }
-
   // ================= API: rutinas & progreso =================
   async function apiGetAllRoutines() {
     const data = await authFetch(`${API_ROUTINES}`);
-    if (Array.isArray(data)) return data.map(asRoutine);
-    if (data && Array.isArray(data.routines)) return data.routines.map(asRoutine);
-    if (data && Array.isArray(data.available)) return data.available.map(asRoutine);
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.routines)) return data.routines;
+    if (data && Array.isArray(data.available)) return data.available;
     return [];
   }
 
-  async function apiGetAssignedRaw() {
-    // devolvemos el array tal cual para poder usar también la info de asignación si existiera
+  async function apiGetAssigned() {
     const data = await authFetch(`${API_ROUTINES}/assigned`);
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data.routines)) return data.routines;
@@ -126,6 +107,39 @@
       method: "POST",
       body: JSON.stringify({ routineId, dayIndex }),
     });
+  }
+
+  // ================= Helper: normalizar rutina =================
+  /**
+   * El backend a veces devuelve:
+   *  - La rutina directamente  { _id, name, ... }
+   *  - Un documento de asignación { _id, user, routine: { ... } }
+   */
+  function normalizeRoutineDoc(doc) {
+    if (!doc) return null;
+
+    // Si ya parece una rutina (tiene name o days), úsala tal cual
+    if (doc.name || doc.days) {
+      return {
+        ...doc,
+        _rid: doc._id || doc.id,
+      };
+    }
+
+    // Si es asignación con campo routine
+    if (doc.routine) {
+      return {
+        ...(doc.routine || {}),
+        _rid: (doc.routine && (doc.routine._id || doc.routine.id)) || doc.routineId,
+        _assignmentId: doc._id || doc.id,
+      };
+    }
+
+    // Último recurso: devolver algo con id
+    return {
+      ...doc,
+      _rid: doc._id || doc.id || doc.routineId,
+    };
   }
 
   // ================= Tabs por rol =================
@@ -178,15 +192,18 @@
     if (!grid) return;
 
     try {
-      const [allAssignedRaw, progressList] = await Promise.all([
-        apiGetAssignedRaw(),
+      const [allRoutines, assignedRaw, progressList] = await Promise.all([
+        apiGetAllRoutines(),
+        apiGetAssigned(),
         apiGetProgress(),
       ]);
 
-      // sacamos solo las rutinas puras y también las asignaciones crudas
-      const assignedRoutines = allAssignedRaw.map(asRoutine);
+      // Normalizar asignadas a "rutinas planas"
+      const assignedRoutines = assignedRaw
+        .map(normalizeRoutineDoc)
+        .filter(Boolean);
 
-      // Mapa de progreso por rutina
+      // Mapa de progreso por routineId
       const progressMap = new Map();
       progressList.forEach((p) => {
         const rid =
@@ -195,7 +212,7 @@
           p.id ||
           p._id;
         if (!rid) return;
-        progressMap.set(rid, p);
+        progressMap.set(String(rid), p);
       });
 
       grid.innerHTML = "";
@@ -210,11 +227,9 @@
         return;
       }
 
-      assignedRoutines.forEach((routinePura, index) => {
-        const r = routinePura || {};
-        const rid = routineIdFrom(allAssignedRaw[index]) || routineIdFrom(r);
+      assignedRoutines.forEach((r) => {
+        const rid = String(r._rid || r._id || r.id || r.routineId);
         const total = r.days?.length || 0;
-
         const prog = progressMap.get(rid) || {};
         const daysDone = Array.isArray(prog.daysDone) ? prog.daysDone : [];
         const done = daysDone.filter(Boolean).length;
@@ -227,7 +242,9 @@
             ${r.name || "Sin nombre"}
           </h4>
           <p class="text-sm text-gray-500 mb-2">
-            ${r.category || "—"} · ${r.difficulty || "—"} · ${r.duration ?? "—"} min
+            ${r.category || "—"} · ${r.difficulty || "—"} · ${
+          r.duration ?? "—"
+        } min
           </p>
           <p class="text-gray-600 mb-4">
             ${r.description || ""}
@@ -268,17 +285,12 @@
         const btn = e.target.closest("button[data-act]");
         if (!btn) return;
         const rid = btn.dataset.id;
-
-        // buscamos la asignación y la rutina pura a partir del id
-        const index = allAssignedRaw.findIndex(
-          (raw) => routineIdFrom(raw) === rid
+        const routine = assignedRoutines.find(
+          (r) => String(r._rid || r._id || r.id || r.routineId) === String(rid)
         );
-        const raw = allAssignedRaw[index];
-        const routine = asRoutine(raw);
-        const prog = progressMap.get(rid);
-
         if (!routine) return;
 
+        const prog = progressMap.get(String(rid));
         if (btn.dataset.act === "start") {
           openExerciseScreen(user, routine, prog);
         } else {
@@ -322,7 +334,7 @@
       ul.appendChild(li);
     });
 
-    scr.dataset.routineId = routine._id || routine.id;
+    scr.dataset.routineId = routine._rid || routine._id || routine.id;
     scr.dataset.dayIndex = String(dayIndex);
     scr.classList.remove("hidden");
   }
@@ -366,30 +378,33 @@
 
     openBtn.onclick = async () => {
       try {
-        const [allRoutinesRaw, assignedRaw] = await Promise.all([
-          authFetch(`${API_ROUTINES}`),
-          apiGetAssignedRaw(),
+        const [all, assignedRaw] = await Promise.all([
+          apiGetAllRoutines(),
+          apiGetAssigned(),
         ]);
 
-        const all = Array.isArray(allRoutinesRaw)
-          ? allRoutinesRaw.map(asRoutine)
-          : (allRoutinesRaw.routines || allRoutinesRaw.available || []).map(asRoutine);
-
         const assignedIds = new Set(
-          assignedRaw.map((r) => routineIdFrom(r))
+          assignedRaw
+            .map(normalizeRoutineDoc)
+            .filter(Boolean)
+            .map((r) => String(r._rid || r._id || r.id || r.routineId))
         );
 
         grid.innerHTML = "";
 
         all.forEach((r) => {
-          const rid = routineIdFrom(r);
-          if (!rid || assignedIds.has(rid)) return;
+          const rid = String(r._id || r.id);
+          if (assignedIds.has(rid)) return;
           const card = document.createElement("article");
           card.className = "border rounded-lg p-4";
           card.innerHTML = `
-            <h4 class="font-medium text-gray-800">${r.name || "Sin nombre"}</h4>
+            <h4 class="font-medium text-gray-800">${
+              r.name || "Sin nombre"
+            }</h4>
             <p class="text-sm text-gray-500 mb-2">
-              ${r.category || "—"} · ${r.difficulty || "—"} · ${r.duration ?? "—"} min
+              ${r.category || "—"} · ${r.difficulty || "—"} · ${
+            r.duration ?? "—"
+          } min
             </p>
             <p class="text-gray-600 mb-4">${r.description || ""}</p>
             <button
@@ -439,12 +454,15 @@
 
     try {
       const [assignedRaw, progressList] = await Promise.all([
-        apiGetAssignedRaw(),
+        apiGetAssigned(),
         apiGetProgress(),
       ]);
 
-      const assignedRoutines = assignedRaw.map(asRoutine);
-      const totalR = assignedRoutines.length;
+      const assigned = assignedRaw
+        .map(normalizeRoutineDoc)
+        .filter(Boolean);
+
+      const totalR = assigned.length;
 
       const progressMap = new Map();
       progressList.forEach((p) => {
@@ -454,11 +472,11 @@
           p.id ||
           p._id;
         if (!rid) return;
-        progressMap.set(rid, p);
+        progressMap.set(String(rid), p);
       });
 
-      const completedR = assignedRoutines.filter((r, index) => {
-        const rid = routineIdFrom(assignedRaw[index]) || routineIdFrom(r);
+      const completedR = assigned.filter((r) => {
+        const rid = String(r._rid || r._id || r.id || r.routineId);
         const rec = progressMap.get(rid);
         const total = r.days?.length || 0;
         return rec && Array.isArray(rec.daysDone)
