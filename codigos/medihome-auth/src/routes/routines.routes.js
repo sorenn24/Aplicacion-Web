@@ -1,6 +1,7 @@
 // src/routes/routines.routes.js
 const express = require("express");
 const RoutineProgress = require("../models/routineProgress.model");
+const CustomRoutine = require("../models/customRoutine.model");
 
 const router = express.Router();
 
@@ -143,84 +144,42 @@ const BASE_ROUTINES = [
   },
 ];
 
-// helper
-function findRoutine(id) {
-  return BASE_ROUTINES.find((r) => r.id === id);
+// ===== Helpers =====
+async function findAnyRoutine(routineId) {
+  // 1) catálogo base
+  const base = BASE_ROUTINES.find((r) => r.id === routineId);
+  if (base) return { ...base, isCustom: false };
+
+  // 2) creadas por terapeuta en BD
+  const custom = await CustomRoutine.findById(routineId).lean();
+  if (custom) {
+    return {
+      ...custom,
+      id: custom._id.toString(),
+      isCustom: true,
+    };
+  }
+
+  return null;
 }
 
-// ===========================
-//  NUEVO: crear rutina (terapeuta)
-//  POST /api/routines
-// ===========================
-router.post("/", async (req, res) => {
+// ======================= RUTINAS (PACIENTE) =======================
+
+// GET /api/routines  -> catálogo completo (base + personalizadas)
+router.get("/", async (_req, res) => {
   try {
-    const user = req.user;
+    const custom = await CustomRoutine.find().lean();
 
-    // Solo terapeuta puede crear rutinas
-    if (!user || user.role !== "therapist") {
-      return res
-        .status(403)
-        .json({ message: "Solo los terapeutas pueden crear rutinas." });
-    }
+    const mappedCustom = custom.map((r) => ({
+      ...r,
+      id: r._id.toString(),
+    }));
 
-    const {
-      name,
-      category,
-      difficulty,
-      duration,
-      description,
-      days,
-    } = req.body;
-
-    if (!name || !name.trim()) {
-      return res.status(400).json({ message: "El nombre es obligatorio." });
-    }
-
-    // id único sencillo
-    const id = `rtn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-    // Normalizar días (para que el front no truene si vienen raros)
-    const safeDays = Array.isArray(days)
-      ? days.map((d, idx) => ({
-          name: d.name || `Ejercicio ${idx + 1}`,
-          reps: d.reps || "",
-          duration: Number(d.duration) || 5,
-          instructions: Array.isArray(d.instructions)
-            ? d.instructions
-            : (d.instructions || "")
-                .toString()
-                .split("\n")
-                .map((t) => t.trim())
-                .filter(Boolean),
-        }))
-      : [];
-
-    const routine = {
-      id,
-      name: name.trim(),
-      category: category || "General",
-      difficulty: difficulty || "Principiante",
-      duration: Number(duration) || 15,
-      description: description || "",
-      days: safeDays,
-      ownerId: user._id || user.id || null,
-    };
-
-    // Guardamos en el catálogo en memoria
-    BASE_ROUTINES.push(routine);
-
-    return res.status(201).json(routine);
+    res.json([...BASE_ROUTINES, ...mappedCustom]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({
-      message: "Error interno al crear la rutina personalizada.",
-    });
+    res.status(500).json({ message: "Error al obtener rutinas" });
   }
-});
-
-// GET /api/routines  -> catálogo completo
-router.get("/", (_req, res) => {
-  res.json(BASE_ROUTINES);
 });
 
 // GET /api/routines/assigned -> IDs rutinas asignadas al usuario
@@ -244,13 +203,12 @@ router.post("/assign", async (req, res) => {
     const userId = req.user._id;
     const { routineId } = req.body;
 
-    const routine = findRoutine(routineId);
+    const routine = await findAnyRoutine(routineId);
     if (!routine) {
       return res.status(404).json({ message: "Rutina no encontrada" });
     }
 
     const totalDays = routine.days?.length || 3;
-
     const daysDone = Array.from({ length: totalDays }, () => false);
 
     const doc = await RoutineProgress.findOneAndUpdate(
@@ -295,12 +253,13 @@ router.post("/progress", async (req, res) => {
     const doc = await RoutineProgress.findOne({ userId, routineId });
 
     let daysDone;
+    const total = totalDays || (await findAnyRoutine(routineId))?.days?.length || 3;
+
     if (doc) {
-      daysDone = doc.daysDone;
-      // asegurar largo
-      while (daysDone.length < totalDays) daysDone.push(false);
+      daysDone = doc.daysDone || [];
+      while (daysDone.length < total) daysDone.push(false);
     } else {
-      daysDone = Array.from({ length: totalDays }, () => false);
+      daysDone = Array.from({ length: total }, () => false);
     }
 
     daysDone[dayIndex] = true;
@@ -328,6 +287,153 @@ router.post("/progress", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error al actualizar progreso" });
+  }
+});
+
+// ======================= RUTINAS TERAPEUTA =======================
+
+// GET /api/routines/therapist/mine -> rutinas creadas por este terapeuta
+router.get("/therapist/mine", async (req, res) => {
+  try {
+    const therapistId = req.user._id;
+    const docs = await CustomRoutine.find({ ownerId: therapistId }).lean();
+
+    const mapped = docs.map((r) => ({
+      ...r,
+      id: r._id.toString(),
+    }));
+
+    res.json(mapped);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error al obtener rutinas del terapeuta" });
+  }
+});
+
+// GET /api/routines/therapist/summary -> métricas panel terapeuta
+router.get("/therapist/summary", async (req, res) => {
+  try {
+    const therapistId = req.user._id;
+
+    const routines = await CustomRoutine.find({ ownerId: therapistId }).lean();
+    const routineIds = routines.map((r) => r._id.toString());
+
+    const progressDocs = await RoutineProgress.find({
+      routineId: { $in: routineIds },
+    }).lean();
+
+    const totalCreated = routines.length;
+
+    const activePatients = new Set(
+      progressDocs.map((p) => p.userId.toString())
+    ).size;
+
+    const completedRoutines = progressDocs.filter((doc) => {
+      if (!Array.isArray(doc.daysDone) || !doc.daysDone.length) return false;
+      return doc.daysDone.every((v) => v === true);
+    }).length;
+
+    const totalAssigned = progressDocs.length;
+    const successRate = totalAssigned
+      ? Math.round((completedRoutines / totalAssigned) * 100)
+      : 0;
+
+    res.json({
+      totalCreated,
+      activePatients,
+      completedRoutines,
+      successRate,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error al obtener resumen del terapeuta" });
+  }
+});
+
+// POST /api/routines  -> crear rutina nueva (terapeuta)
+router.post("/", async (req, res) => {
+  try {
+    const therapistId = req.user._id;
+    const { name, category, difficulty, duration, description, days } = req.body;
+
+    const doc = await CustomRoutine.create({
+      name,
+      category,
+      difficulty,
+      duration,
+      description,
+      days,
+      ownerId: therapistId,
+    });
+
+    res.status(201).json({
+      ...doc.toObject(),
+      id: doc._id.toString(),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error al crear rutina" });
+  }
+});
+
+// PUT /api/routines/:id  -> editar rutina creada
+router.put("/:id", async (req, res) => {
+  try {
+    const therapistId = req.user._id;
+    const { id } = req.params;
+
+    const routine = await CustomRoutine.findOne({
+      _id: id,
+      ownerId: therapistId,
+    });
+
+    if (!routine) {
+      return res.status(404).json({ message: "Rutina no encontrada" });
+    }
+
+    const { name, category, difficulty, duration, description, days } = req.body;
+
+    routine.name = name;
+    routine.category = category;
+    routine.difficulty = difficulty;
+    routine.duration = duration;
+    routine.description = description;
+    routine.days = days;
+
+    await routine.save();
+
+    res.json({
+      ...routine.toObject(),
+      id: routine._id.toString(),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error al actualizar rutina" });
+  }
+});
+
+// DELETE /api/routines/:id -> eliminar rutina creada
+router.delete("/:id", async (req, res) => {
+  try {
+    const therapistId = req.user._id;
+    const { id } = req.params;
+
+    const routine = await CustomRoutine.findOneAndDelete({
+      _id: id,
+      ownerId: therapistId,
+    });
+
+    if (!routine) {
+      return res.status(404).json({ message: "Rutina no encontrada" });
+    }
+
+    // Opcional: borrar progresos relacionados
+    await RoutineProgress.deleteMany({ routineId: id });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error al eliminar rutina" });
   }
 });
 
