@@ -1,16 +1,13 @@
-// dashboard.js — Panel paciente/terapeuta con datos desde la API
+// dashboard.js — Panel paciente/terapeuta con datos desde la API (con progreso corregido)
 (function () {
   "use strict";
 
   // ==========================
   //  Helpers DOM
   // ==========================
-  const $ = (s, ctx = document) => ctx.querySelector(s);
+  const $  = (s, ctx = document) => ctx.querySelector(s);
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
-  // ==========================
-  //  Notificaciones
-  // ==========================
   function notify(msg, type = "info") {
     const box = $("#notifications");
     if (!box) {
@@ -62,7 +59,7 @@
     }
   }
 
-  // En local usa localhost, en producción usa el mismo dominio de Render
+  // En local usa localhost, en producción usa el backend en Render
   const API_BASE = window.location.origin.includes("localhost")
     ? "http://localhost:4000/api"
     : "https://medihom-web.onrender.com/api";
@@ -83,7 +80,7 @@
   }
 
   // ==========================
-  //  API Rutinas
+  //  API Rutinas / Progreso
   // ==========================
   let cachedRoutines = [];
 
@@ -156,20 +153,6 @@
     return await res.json();
   }
 
-  // NUEVO: crear rutina (terapeuta)
-  async function apiCreateRoutine(payload) {
-    const res = await authFetch(`${API_BASE}/routines`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const msg = await res.text().catch(() => "");
-      throw new Error(msg || "Error al crear rutina");
-    }
-    return await res.json();
-  }
-
   // ==========================
   //  Tabs por rol
   // ==========================
@@ -219,6 +202,22 @@
   // ==========================
   //  PACIENTE: Rutinas
   // ==========================
+  function getNextDayIndex(routine, progressRecord) {
+    const total = routine.days?.length || 3;
+    let daysDone = [];
+
+    if (progressRecord && Array.isArray(progressRecord.daysDone)) {
+      daysDone = [...progressRecord.daysDone];
+      // extender si backend tiene menos días que el plan actual
+      while (daysDone.length < total) daysDone.push(false);
+    } else {
+      daysDone = Array.from({ length: total }, () => false);
+    }
+
+    const idx = daysDone.findIndex((v) => !v);
+    return idx === -1 ? total - 1 : idx; // si ya terminó, se queda en el último
+  }
+
   async function renderPatientRoutines(user) {
     const routinesGrid = $("#routinesGrid");
     if (!routinesGrid) return;
@@ -259,7 +258,9 @@
         const daysDone = Array.isArray(prog.daysDone)
           ? prog.daysDone
           : Array.from({ length: total }, (_, i) =>
-              prog.completedDayCount ? i < prog.completedDayCount : false
+              prog.completedDayCount
+                ? i < prog.completedDayCount
+                : false
             );
 
         const done = daysDone.filter(Boolean).length;
@@ -296,6 +297,25 @@
         `;
         routinesGrid.appendChild(card);
       });
+
+      // Delegación de eventos para botones, usando también el progreso actual
+      routinesGrid.onclick = async (e) => {
+        const btn = e.target.closest("button[data-act]");
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        const allRoutines = await apiGetAllRoutines();
+        const routine = allRoutines.find((r) => r.id === id);
+        if (!routine) return;
+
+        const prog = progressMap[id] || {};
+
+        if (btn.dataset.act === "start") {
+          openExerciseScreen(routine, prog);
+        } else if (btn.dataset.act === "details") {
+          openRoutineDetails(routine, prog);
+        }
+      };
     } catch (err) {
       console.error(err);
       notify("No se pudieron cargar tus rutinas", "error");
@@ -307,32 +327,13 @@
         </div>`;
       return;
     }
-
-    // Delegación de eventos para botones
-    routinesGrid.onclick = async (e) => {
-      const btn = e.target.closest("button[data-act]");
-      if (!btn) return;
-
-      const id = btn.dataset.id;
-      const all = await apiGetAllRoutines();
-      const routine = all.find((r) => r.id === id);
-      if (!routine) return;
-
-      if (btn.dataset.act === "start") {
-        openExerciseScreen(routine);
-      } else if (btn.dataset.act === "details") {
-        openRoutineDetails(routine);
-      }
-    };
   }
 
-  function openExerciseScreen(routine) {
+  function openExerciseScreen(routine, progressRecord) {
     const scr = $("#exerciseScreen");
     if (!scr) return;
 
-    // Para respetar progreso real deberíamos consultar apiGetProgressMap().
-    // Por simplicidad empezamos en el Día 1.
-    const dayIndex = 0;
+    const dayIndex = getNextDayIndex(routine, progressRecord);
     const d =
       routine.days?.[dayIndex] || {
         name: "Ejercicio",
@@ -361,13 +362,11 @@
     scr.classList.remove("hidden");
   }
 
-  async function openRoutineDetails(routine) {
+  async function openRoutineDetails(routine, progressRecord) {
     const modal = $("#routineDetailsModal");
     if (!modal) return;
 
-    const progressMap = await apiGetProgressMap();
-    const prog = progressMap[routine.id] || {};
-
+    const prog = progressRecord || {};
     $("#detailsRoutineName").textContent = routine.name;
     $("#detailsCompletionDate").textContent = prog.completedAt
       ? new Date(prog.completedAt).toLocaleString()
@@ -395,7 +394,7 @@
   }
 
   // ==========================
-  //  Modal seleccionar rutina (paciente)
+  //  Modal seleccionar rutina
   // ==========================
   function setupSelectRoutine(user) {
     const modal = $("#routineModal");
@@ -460,7 +459,7 @@
   }
 
   // ==========================
-  //  Terapeuta
+  //  Terapeuta (listado simple)
   // ==========================
   async function setupTherapistCreate(user) {
     const openBtn = $("#createRoutineBtn");
@@ -472,8 +471,6 @@
 
     if (!openBtn || !modal || !form || !grid) return;
 
-    const therapistId = user._id || user.id;
-
     const counters = {
       created: $("#therapistRoutinesCount"),
       activePatients: $("#activePatientsCount"),
@@ -484,7 +481,7 @@
     async function refreshList() {
       try {
         const all = await apiGetAllRoutines();
-        const mine = all.filter((r) => r.ownerId === therapistId);
+        const mine = all.filter((r) => r.ownerId === user.id);
         grid.innerHTML = "";
         mine.forEach((r) => {
           const card = document.createElement("article");
@@ -499,11 +496,10 @@
           grid.appendChild(card);
         });
 
-        if (counters.created) counters.created.textContent = mine.length;
-        // Estas métricas las dejamos en 0 por ahora (no tenemos endpoint por terapeuta)
-        if (counters.activePatients) counters.activePatients.textContent = "0";
-        if (counters.completed) counters.completed.textContent = "0";
-        if (counters.successRate) counters.successRate.textContent = "0%";
+        counters.created.textContent = mine.length;
+        counters.activePatients.textContent = "0";
+        counters.completed.textContent = "0";
+        counters.successRate.textContent = "0%";
       } catch (err) {
         console.error(err);
         notify("No se pudieron cargar tus rutinas", "error");
@@ -516,73 +512,18 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      try {
-        // Campos generales
-        const name = $("#routineName").value.trim();
-        const category = $("#routineCategory").value;
-        const difficulty = $("#routineDifficulty").value;
-        const duration = Number($("#routineDuration").value) || 15;
-        const description = $("#routineDescription").value.trim();
-
-        if (!name) {
-          notify("El nombre de la rutina es obligatorio", "error");
-          return;
-        }
-
-        // Días (3 fijos en el modal)
-        const days = [
-          {
-            name: $("#exercise1Name").value.trim(),
-            reps: $("#exercise1Reps").value.trim(),
-            duration: Number($("#exercise1Duration").value) || 5,
-            instructions: [],
-          },
-          {
-            name: $("#exercise2Name").value.trim(),
-            reps: $("#exercise2Reps").value.trim(),
-            duration: Number($("#exercise2Duration").value) || 5,
-            instructions: [],
-          },
-          {
-            name: $("#exercise3Name").value.trim(),
-            reps: $("#exercise3Reps").value.trim(),
-            duration: Number($("#exercise3Duration").value) || 5,
-            instructions: [],
-          },
-        ];
-
-        const payload = {
-          name,
-          category,
-          difficulty,
-          duration,
-          description,
-          days,
-        };
-
-        await apiCreateRoutine(payload);
-
-        notify("Rutina creada correctamente", "success");
-        modal.classList.add("hidden");
-        form.reset();
-        cachedRoutines = []; // para que se vuelvan a leer del backend
-        await refreshList();
-      } catch (err) {
-        console.error(err);
-        notify(
-          err.message || "Error inesperado al crear la rutina",
-          "error"
-        );
-      }
+      // Aquí podrías implementar POST /api/routines en el futuro.
+      notify(
+        "Crear rutina (POST /api/routines) todavía no está implementado en este front",
+        "info"
+      );
     });
 
-    // Cargar lista inicial
-    await refreshList();
+    refreshList();
   }
 
   // ==========================
-  //  PROGRESO (paciente)
+  //  PROGRESO
   // ==========================
   async function refreshProgressDashboard(user) {
     if (!user) return;
@@ -602,10 +543,8 @@
         const rec = progressMap[r.id];
         if (!rec) return false;
         if (Array.isArray(rec.daysDone))
-          return (
-            rec.daysDone.length &&
-            rec.daysDone.every((v) => v === true || v === 1)
-          );
+          return rec.daysDone.length &&
+            rec.daysDone.every((v) => v === true || v === 1);
         return !!rec.completed;
       }).length;
 
