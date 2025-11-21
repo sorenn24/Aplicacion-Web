@@ -203,6 +203,31 @@
   }
 
   // ==========================
+  //  Helpers de progreso
+  // ==========================
+  function getNextDayIndex(routine, progressRecord) {
+    const total = routine.days?.length || 0;
+
+    // Si el backend regresa un array daysDone, usamos eso
+    if (progressRecord && Array.isArray(progressRecord.daysDone)) {
+      const idx = progressRecord.daysDone.findIndex((d) => !d);
+      if (idx !== -1) return idx;
+      // todo completado → nos quedamos en el último (solo para revisar)
+      return total > 0 ? total - 1 : 0;
+    }
+
+    // Otra forma: completedDayCount (por si lo usas en el backend)
+    if (progressRecord && typeof progressRecord.completedDayCount === "number") {
+      const n = progressRecord.completedDayCount;
+      if (n < total) return n;
+      return total > 0 ? total - 1 : 0;
+    }
+
+    // Si no hay registro aún, empezamos en día 0
+    return 0;
+  }
+
+  // ==========================
   //  PACIENTE: Rutinas
   // ==========================
   async function renderPatientRoutines(user) {
@@ -251,7 +276,7 @@
             );
 
         const done = daysDone.filter(Boolean).length;
-        const pct = Math.round((done / total) * 100);
+        const pct = total ? Math.round((done / total) * 100) : 0;
 
         const card = document.createElement("article");
         card.className = "bg-white rounded-lg card-minimal p-5 border";
@@ -314,14 +339,16 @@
     };
   }
 
-  function openExerciseScreen(routine) {
+  // === NUEVO: usa el progreso real para saber qué día va ===
+  async function openExerciseScreen(routine) {
     const scr = $("#exerciseScreen");
     if (!scr) return;
 
-    // Para determinar el siguiente día pendiente, usamos el backend en el progreso.
-    // Aquí asumimos que se avanza día a día. Para simplificar, siempre empezamos por el día 1.
-    // Si quieres que respete el progreso exacto, puedes cargar apiGetProgressMap() y calcular.
-    const dayIndex = 0; // simplificado; si ya tienes el índice en la vista, puedes adaptarlo
+    // Pedimos el progreso de todas las rutinas y tomamos el de esta
+    const progressMap = await apiGetProgressMap();
+    const prog = progressMap[routine.id] || {};
+
+    const dayIndex = getNextDayIndex(routine, prog);
     const d =
       routine.days?.[dayIndex] || {
         name: "Ejercicio",
@@ -503,7 +530,6 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       // Esta parte depende de cómo expusiste la API de creación de rutinas.
-      // Si todavía no la tienes, puedes dejar solo el efecto visual.
       notify(
         "Crear rutina (POST /api/routines) aún no implementado en este front",
         "info"
@@ -715,4 +741,3 @@
     );
   });
 })();
-
