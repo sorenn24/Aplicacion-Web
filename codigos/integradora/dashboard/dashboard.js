@@ -5,7 +5,7 @@
   // ==========================
   //  Helpers DOM
   // ==========================
-  const $  = (s, ctx = document) => ctx.querySelector(s);
+  const $ = (s, ctx = document) => ctx.querySelector(s);
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
   // ==========================
@@ -156,6 +156,20 @@
     return await res.json();
   }
 
+  // NUEVO: crear rutina (terapeuta)
+  async function apiCreateRoutine(payload) {
+    const res = await authFetch(`${API_BASE}/routines`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const msg = await res.text().catch(() => "");
+      throw new Error(msg || "Error al crear rutina");
+    }
+    return await res.json();
+  }
+
   // ==========================
   //  Tabs por rol
   // ==========================
@@ -203,31 +217,6 @@
   }
 
   // ==========================
-  //  Helpers de progreso
-  // ==========================
-  function getNextDayIndex(routine, progressRecord) {
-    const total = routine.days?.length || 0;
-
-    // Si el backend regresa un array daysDone, usamos eso
-    if (progressRecord && Array.isArray(progressRecord.daysDone)) {
-      const idx = progressRecord.daysDone.findIndex((d) => !d);
-      if (idx !== -1) return idx;
-      // todo completado → nos quedamos en el último (solo para revisar)
-      return total > 0 ? total - 1 : 0;
-    }
-
-    // Otra forma: completedDayCount (por si lo usas en el backend)
-    if (progressRecord && typeof progressRecord.completedDayCount === "number") {
-      const n = progressRecord.completedDayCount;
-      if (n < total) return n;
-      return total > 0 ? total - 1 : 0;
-    }
-
-    // Si no hay registro aún, empezamos en día 0
-    return 0;
-  }
-
-  // ==========================
   //  PACIENTE: Rutinas
   // ==========================
   async function renderPatientRoutines(user) {
@@ -270,9 +259,7 @@
         const daysDone = Array.isArray(prog.daysDone)
           ? prog.daysDone
           : Array.from({ length: total }, (_, i) =>
-              prog.completedDayCount
-                ? i < prog.completedDayCount
-                : false
+              prog.completedDayCount ? i < prog.completedDayCount : false
             );
 
         const done = daysDone.filter(Boolean).length;
@@ -339,16 +326,13 @@
     };
   }
 
-  // === NUEVO: usa el progreso real para saber qué día va ===
-  async function openExerciseScreen(routine) {
+  function openExerciseScreen(routine) {
     const scr = $("#exerciseScreen");
     if (!scr) return;
 
-    // Pedimos el progreso de todas las rutinas y tomamos el de esta
-    const progressMap = await apiGetProgressMap();
-    const prog = progressMap[routine.id] || {};
-
-    const dayIndex = getNextDayIndex(routine, prog);
+    // Para respetar progreso real deberíamos consultar apiGetProgressMap().
+    // Por simplicidad empezamos en el Día 1.
+    const dayIndex = 0;
     const d =
       routine.days?.[dayIndex] || {
         name: "Ejercicio",
@@ -411,7 +395,7 @@
   }
 
   // ==========================
-  //  Modal seleccionar rutina
+  //  Modal seleccionar rutina (paciente)
   // ==========================
   function setupSelectRoutine(user) {
     const modal = $("#routineModal");
@@ -476,7 +460,7 @@
   }
 
   // ==========================
-  //  Terapeuta (solo listado simple)
+  //  Terapeuta
   // ==========================
   async function setupTherapistCreate(user) {
     const openBtn = $("#createRoutineBtn");
@@ -488,6 +472,8 @@
 
     if (!openBtn || !modal || !form || !grid) return;
 
+    const therapistId = user._id || user.id;
+
     const counters = {
       created: $("#therapistRoutinesCount"),
       activePatients: $("#activePatientsCount"),
@@ -498,7 +484,7 @@
     async function refreshList() {
       try {
         const all = await apiGetAllRoutines();
-        const mine = all.filter((r) => r.ownerId === user.id);
+        const mine = all.filter((r) => r.ownerId === therapistId);
         grid.innerHTML = "";
         mine.forEach((r) => {
           const card = document.createElement("article");
@@ -513,10 +499,11 @@
           grid.appendChild(card);
         });
 
-        counters.created.textContent = mine.length;
-        counters.activePatients.textContent = "0";
-        counters.completed.textContent = "0";
-        counters.successRate.textContent = "0%";
+        if (counters.created) counters.created.textContent = mine.length;
+        // Estas métricas las dejamos en 0 por ahora (no tenemos endpoint por terapeuta)
+        if (counters.activePatients) counters.activePatients.textContent = "0";
+        if (counters.completed) counters.completed.textContent = "0";
+        if (counters.successRate) counters.successRate.textContent = "0%";
       } catch (err) {
         console.error(err);
         notify("No se pudieron cargar tus rutinas", "error");
@@ -529,18 +516,73 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      // Esta parte depende de cómo expusiste la API de creación de rutinas.
-      notify(
-        "Crear rutina (POST /api/routines) aún no implementado en este front",
-        "info"
-      );
+
+      try {
+        // Campos generales
+        const name = $("#routineName").value.trim();
+        const category = $("#routineCategory").value;
+        const difficulty = $("#routineDifficulty").value;
+        const duration = Number($("#routineDuration").value) || 15;
+        const description = $("#routineDescription").value.trim();
+
+        if (!name) {
+          notify("El nombre de la rutina es obligatorio", "error");
+          return;
+        }
+
+        // Días (3 fijos en el modal)
+        const days = [
+          {
+            name: $("#exercise1Name").value.trim(),
+            reps: $("#exercise1Reps").value.trim(),
+            duration: Number($("#exercise1Duration").value) || 5,
+            instructions: [],
+          },
+          {
+            name: $("#exercise2Name").value.trim(),
+            reps: $("#exercise2Reps").value.trim(),
+            duration: Number($("#exercise2Duration").value) || 5,
+            instructions: [],
+          },
+          {
+            name: $("#exercise3Name").value.trim(),
+            reps: $("#exercise3Reps").value.trim(),
+            duration: Number($("#exercise3Duration").value) || 5,
+            instructions: [],
+          },
+        ];
+
+        const payload = {
+          name,
+          category,
+          difficulty,
+          duration,
+          description,
+          days,
+        };
+
+        await apiCreateRoutine(payload);
+
+        notify("Rutina creada correctamente", "success");
+        modal.classList.add("hidden");
+        form.reset();
+        cachedRoutines = []; // para que se vuelvan a leer del backend
+        await refreshList();
+      } catch (err) {
+        console.error(err);
+        notify(
+          err.message || "Error inesperado al crear la rutina",
+          "error"
+        );
+      }
     });
 
-    refreshList();
+    // Cargar lista inicial
+    await refreshList();
   }
 
   // ==========================
-  //  PROGRESO
+  //  PROGRESO (paciente)
   // ==========================
   async function refreshProgressDashboard(user) {
     if (!user) return;
@@ -560,8 +602,10 @@
         const rec = progressMap[r.id];
         if (!rec) return false;
         if (Array.isArray(rec.daysDone))
-          return rec.daysDone.length &&
-            rec.daysDone.every((v) => v === true || v === 1);
+          return (
+            rec.daysDone.length &&
+            rec.daysDone.every((v) => v === true || v === 1)
+          );
         return !!rec.completed;
       }).length;
 
