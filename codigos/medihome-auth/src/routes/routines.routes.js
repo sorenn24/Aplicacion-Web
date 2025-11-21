@@ -148,6 +148,76 @@ function findRoutine(id) {
   return BASE_ROUTINES.find((r) => r.id === id);
 }
 
+// ===========================
+//  NUEVO: crear rutina (terapeuta)
+//  POST /api/routines
+// ===========================
+router.post("/", async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Solo terapeuta puede crear rutinas
+    if (!user || user.role !== "therapist") {
+      return res
+        .status(403)
+        .json({ message: "Solo los terapeutas pueden crear rutinas." });
+    }
+
+    const {
+      name,
+      category,
+      difficulty,
+      duration,
+      description,
+      days,
+    } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "El nombre es obligatorio." });
+    }
+
+    // id único sencillo
+    const id = `rtn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    // Normalizar días (para que el front no truene si vienen raros)
+    const safeDays = Array.isArray(days)
+      ? days.map((d, idx) => ({
+          name: d.name || `Ejercicio ${idx + 1}`,
+          reps: d.reps || "",
+          duration: Number(d.duration) || 5,
+          instructions: Array.isArray(d.instructions)
+            ? d.instructions
+            : (d.instructions || "")
+                .toString()
+                .split("\n")
+                .map((t) => t.trim())
+                .filter(Boolean),
+        }))
+      : [];
+
+    const routine = {
+      id,
+      name: name.trim(),
+      category: category || "General",
+      difficulty: difficulty || "Principiante",
+      duration: Number(duration) || 15,
+      description: description || "",
+      days: safeDays,
+      ownerId: user._id || user.id || null,
+    };
+
+    // Guardamos en el catálogo en memoria
+    BASE_ROUTINES.push(routine);
+
+    return res.status(201).json(routine);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error interno al crear la rutina personalizada.",
+    });
+  }
+});
+
 // GET /api/routines  -> catálogo completo
 router.get("/", (_req, res) => {
   res.json(BASE_ROUTINES);
