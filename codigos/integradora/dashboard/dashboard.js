@@ -623,52 +623,56 @@
     }
 
     // Crear / editar rutina
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-      const payload = {
-        name: $("#routineName").value.trim(),
-        category: $("#routineCategory").value,
-        difficulty: $("#routineDifficulty").value,
-        duration: Number($("#routineDuration").value) || 0,
-        description: $("#routineDescription").value.trim(),
-        days: [
-          {
-            name: $("#exercise1Name").value.trim(),
-            reps: $("#exercise1Reps").value.trim(),
-            duration: Number($("#exercise1Duration").value) || 0,
-          },
-          {
-            name: $("#exercise2Name").value.trim(),
-            reps: $("#exercise2Reps").value.trim(),
-            duration: Number($("#exercise2Duration").value) || 0,
-          },
-          {
-            name: $("#exercise3Name").value.trim(),
-            reps: $("#exercise3Reps").value.trim(),
-            duration: Number($("#exercise3Duration").value) || 0,
-          },
-        ],
-      };
+  // ID del terapeuta actual (ajusta según qué guardas en el user)
+  const ownerId = user._id || user.id || user.email;
 
-      try {
-        if (editingRoutineId) {
-          await apiUpdateRoutine(editingRoutineId, payload);
-          notify("Rutina actualizada correctamente", "success");
-        } else {
-          await apiCreateRoutine(payload);
-          notify("Rutina creada correctamente", "success");
-        }
+  const payload = {
+    ownerId, // ← IMPORTANTE
+    name: $("#routineName").value.trim(),
+    category: $("#routineCategory").value,
+    difficulty: $("#routineDifficulty").value,
+    duration: Number($("#routineDuration").value) || 0,
+    description: $("#routineDescription").value.trim(),
+    days: [
+      {
+        name: $("#exercise1Name").value.trim(),
+        reps: $("#exercise1Reps").value.trim(),
+        duration: Number($("#exercise1Duration").value) || 0,
+      },
+      {
+        name: $("#exercise2Name").value.trim(),
+        reps: $("#exercise2Reps").value.trim(),
+        duration: Number($("#exercise2Duration").value) || 0,
+      },
+      {
+        name: $("#exercise3Name").value.trim(),
+        reps: $("#exercise3Reps").value.trim(),
+        duration: Number($("#exercise3Duration").value) || 0,
+      },
+    ],
+  };
 
-        modal.classList.add("hidden");
-        cachedRoutines = [];
-        await refreshTherapistDashboard(user);
-      } catch (err) {
-        console.error(err);
-        notify("No se pudo guardar la rutina", "error");
-      }
-    });
+  try {
+    if (editingRoutineId) {
+      await apiUpdateRoutine(editingRoutineId, payload);
+      notify("Rutina actualizada correctamente", "success");
+    } else {
+      await apiCreateRoutine(payload);
+      notify("Rutina creada correctamente", "success");
+    }
+
+    modal.classList.add("hidden");
+    cachedRoutines = [];
+    await refreshTherapistDashboard(user);
+  } catch (err) {
+    console.error(err);
+    notify("No se pudo guardar la rutina", "error");
   }
+});
+
 
   // ==========================
   //  PROGRESO (paciente)
