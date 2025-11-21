@@ -11,7 +11,7 @@ const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const { auth } = require("./middleware/auth");
-const routinesRoutes = require("./routes/routines.routes"); // 🆕 Rutas de rutinas/progreso
+const routinesRoutes = require("./routes/routines.routes");
 
 const app = express();
 
@@ -23,17 +23,42 @@ app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS
-// En desarrollo: CLIENT_ORIGIN=http://127.0.0.1:5500
-// En Render: normalmente se deja vacío y se permite el mismo host
+// ===================== CORS =====================
+// Aquí ponemos TODOS los orígenes que pueden llamar a tu API
+const allowedOrigins = [
+  "http://127.0.0.1:5500",
+  "http://localhost:5500",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://aplicacion-web-03k1.onrender.com", // tu frontend
+  "https://medihom-web.onrender.com",         // mismo dominio (por si se sirve todo junto)
+];
+
+// Si quieres, también puedes seguir usando CLIENT_ORIGIN extra:
+if (process.env.CLIENT_ORIGIN) {
+  allowedOrigins.push(process.env.CLIENT_ORIGIN);
+}
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || true,
+    origin(origin, callback) {
+      // peticiones sin Origin (Postman, curl, el servidor mismo, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("❌ Origin NO permitido por CORS:", origin);
+      // puedes devolver callback(null, false) para que responda sin CORS,
+      // o un error. Para debug se ve en logs.
+      return callback(null, false);
+    },
     credentials: true,
   })
 );
 
-// Rate limit básico en rutas de auth
+// ===================== Rate limit SOLO en /api/auth =====================
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
