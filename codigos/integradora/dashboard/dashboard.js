@@ -1,22 +1,20 @@
-// dashboard.js — Panel paciente/terapeuta con datos desde la API
+// dashboard.js — Panel paciente/terapeuta completo (crear/editar/eliminar rutinas)
 (function () {
   "use strict";
 
-  // ==========================
-  //  Helpers DOM
-  // ==========================
+  // ============================
+  // Helpers DOM
+  // ============================
   const $ = (s, ctx = document) => ctx.querySelector(s);
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
-  // ==========================
-  //  Notificaciones
-  // ==========================
+  // ============================
+  // Notificaciones
+  // ============================
   function notify(msg, type = "info") {
     const box = $("#notifications");
-    if (!box) {
-      console.log(`[${type}]`, msg);
-      return;
-    }
+    if (!box) return console.log(`[${type}]`, msg);
+
     const el = document.createElement("div");
     el.className =
       "px-4 py-3 rounded-xl shadow text-white text-sm notification " +
@@ -25,14 +23,15 @@
         : type === "success"
         ? "bg-green-600"
         : "bg-gray-800");
+
     el.textContent = msg;
     box.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   }
 
-  // ==========================
-  //  Sesión y API
-  // ==========================
+  // ============================
+  // Sesión
+  // ============================
   const STORAGE_CURRENT_USER = "currentUser";
   const TOKEN_KEY = "auth_token";
 
@@ -55,174 +54,120 @@
   }
 
   function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
+  // =================================
+  // API base (Render / local)
+  // =================================
+  const API_BASE = window.location.origin.includes("localhost")
+    ? "http://localhost:4000/api"
+    : "https://medihom-web.onrender.com/api";
+
+  async function authFetch(url, options = {}) {
+    const token = getToken();
+    const headers = { ...(options.headers || {}) };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (!headers["Content-Type"] && options.body) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    const res = await fetch(url, {
+      credentials: "include",
+      ...options,
+      headers,
+    });
+
+    if (!res.ok) {
+      const msg = await res.text().catch(() => "");
+      throw new Error(msg || `Error HTTP ${res.status}`);
+    }
+
     try {
-      return localStorage.getItem(TOKEN_KEY);
+      return await res.json();
     } catch {
       return null;
     }
   }
 
-  // En local usa localhost, en producción usa el mismo dominio de Render
-  const API_BASE = window.location.origin.includes("localhost")
-    ? "http://localhost:4000/api"
-    : "https://medihom-web.onrender.com/api";
-
-  const API_ROUTINES = `${API_BASE}/routines`;
-  const API_THERAPIST = `${API_BASE}/routines/therapist`;
-
-  async function authFetch(url, options = {}) {
-    const token = getToken();
-    const headers = { ...(options.headers || {}) };
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    return fetch(url, {
-      credentials: "include",
-      ...options,
-      headers,
-    });
-  }
-
-  // ==========================
-  //  API Rutinas (paciente)
-  // ==========================
+  // =====================================
+  // API Rutinas (paciente y terapeuta)
+  // =====================================
   let cachedRoutines = [];
+  let therapistRoutinesCache = [];
+  let currentEditingRoutineId = null;
 
-  async function apiGetAllRoutines() {
+  // === Paciente / generales ===
+  const apiGetAllRoutines = async () => {
     if (cachedRoutines.length) return cachedRoutines;
-    const res = await authFetch(`${API_ROUTINES}`);
-    if (!res.ok) throw new Error("No se pudieron cargar las rutinas");
-    const data = await res.json();
-
-    if (Array.isArray(data)) {
-      cachedRoutines = data;
-    } else if (Array.isArray(data.routines)) {
-      cachedRoutines = data.routines;
-    } else {
-      cachedRoutines = [];
-    }
-
+    const data = await authFetch(`${API_BASE}/routines`);
+    cachedRoutines = Array.isArray(data) ? data : data.routines || [];
     return cachedRoutines;
-  }
+  };
 
-  async function apiGetAssignedRoutineIds() {
-    const res = await authFetch(`${API_ROUTINES}/assigned`);
-    if (!res.ok) throw new Error("Error al obtener rutinas asignadas");
-    const data = await res.json();
+  const apiGetAssignedRoutineIds = async () => {
+    const data = await authFetch(`${API_BASE}/routines/assigned`);
     if (Array.isArray(data)) return data;
     if (Array.isArray(data.assigned)) return data.assigned;
     if (Array.isArray(data.routineIds)) return data.routineIds;
     return [];
-  }
+  };
 
-  async function apiAssignRoutine(routineId) {
-    const res = await authFetch(`${API_ROUTINES}/assign`, {
+  const apiAssignRoutine = async (routineId) =>
+    authFetch(`${API_BASE}/routines/assign`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ routineId }),
     });
-    if (!res.ok) throw new Error("Error al asignar rutina");
-    return await res.json();
-  }
 
-  async function apiGetProgressMap() {
-    const res = await authFetch(`${API_ROUTINES}/progress`);
-    if (!res.ok) throw new Error("Error al obtener progreso");
-    const arr = await res.json();
+  const apiGetProgressMap = async () => {
+    const arr = await authFetch(`${API_BASE}/routines/progress`);
     const map = {};
     if (Array.isArray(arr)) {
       arr.forEach((p) => {
-        if (p && p.routineId) {
-          map[p.routineId] = p;
-        }
+        if (p && p.routineId) map[p.routineId] = p;
       });
     }
     return map;
-  }
+  };
 
-  async function apiMarkDayDone(routine, dayIndex) {
-    const totalDays = routine.days?.length || 3;
-    const exerciseName =
-      routine.days?.[dayIndex]?.name || `Día ${dayIndex + 1}`;
-
-    const res = await authFetch(`${API_ROUTINES}/progress`, {
+  const apiMarkDayDone = async (routineId, dayIndex, totalDays, exerciseName) =>
+    authFetch(`${API_BASE}/routines/progress`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        routineId: routine.id,
+        routineId,
         dayIndex,
         totalDays,
         exerciseName,
       }),
     });
-    if (!res.ok) throw new Error("Error al guardar progreso");
-    return await res.json();
-  }
 
-  // ==========================
-  //  API Rutinas (terapeuta)
-  // ==========================
-  async function apiGetTherapistRoutines() {
-    const res = await authFetch(`${API_THERAPIST}/mine`);
-    if (!res.ok) throw new Error("Error al obtener rutinas del terapeuta");
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  }
-
-  async function apiGetTherapistStats() {
-    const res = await authFetch(`${API_THERAPIST}/stats`);
-    if (!res.ok) throw new Error("Error al obtener métricas del terapeuta");
-    const data = await res.json();
-    return data || {
-      created: 0,
-      activePatients: 0,
-      completed: 0,
-      successRate: 0,
-    };
-  }
-
-  async function apiCreateRoutine(payload) {
-    const res = await authFetch(`${API_ROUTINES}`, {
+  // === Terapeuta ===
+  const apiCreateRoutine = async (data) =>
+    authFetch(`${API_BASE}/routines`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || "Error al crear rutina");
-    }
-    return await res.json();
-  }
 
-  async function apiUpdateRoutine(id, payload) {
-    const res = await authFetch(`${API_ROUTINES}/${id}`, {
+  const apiUpdateRoutine = async (id, data) =>
+    authFetch(`${API_BASE}/routines/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || "Error al actualizar rutina");
-    }
-    return await res.json();
-  }
 
-  async function apiDeleteRoutine(id) {
-    const res = await authFetch(`${API_ROUTINES}/${id}`, {
+  const apiDeleteRoutine = async (id) =>
+    authFetch(`${API_BASE}/routines/${id}`, {
       method: "DELETE",
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || "Error al eliminar rutina");
-    }
-    return await res.json().catch(() => null);
-  }
 
-  // ==========================
-  //  Tabs por rol
-  // ==========================
+  const apiGetTherapistRoutines = async () =>
+    authFetch(`${API_BASE}/routines/therapist/mine`);
+
+  const apiGetTherapistStats = async () =>
+    authFetch(`${API_BASE}/routines/therapist/summary`); // <- ruta correcta en tu backend
+
+  // =============================
+  // Tabs según rol
+  // =============================
   const ROLE_TABS = {
     patient: [
       { id: "routinesSection", label: "Rutinas" },
@@ -237,234 +182,49 @@
     ],
   };
 
-  function buildTabs(role, currentUser) {
+  function buildTabs(role, user) {
     const tabs = ROLE_TABS[role] || ROLE_TABS.patient;
     const nav = $("#navigationTabs");
-    if (!nav) return;
     nav.innerHTML = "";
 
-    tabs.forEach((t, idx) => {
+    tabs.forEach((t, i) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className =
         "px-3 py-2 text-sm border-b-2 border-transparent hover:border-blue-500";
       btn.textContent = t.label;
       btn.dataset.target = t.id;
+
       btn.addEventListener("click", () => {
         $$("#navigationTabs button").forEach((b) =>
           b.classList.remove("border-blue-600", "text-blue-600")
         );
         btn.classList.add("border-blue-600", "text-blue-600");
+
         $$(".section").forEach((s) => s.classList.add("hidden"));
         document.getElementById(t.id)?.classList.remove("hidden");
+
         if (t.id === "progressSection") {
-          refreshProgressDashboard(currentUser);
+          refreshProgressDashboard(user);
         } else if (t.id === "therapistSection") {
-          refreshTherapistDashboard(currentUser);
+          refreshTherapistDashboard(user);
         }
       });
+
       nav.appendChild(btn);
-      if (idx === 0) btn.click();
+      if (i === 0) btn.click();
     });
   }
 
-  // ==========================
-  //  PACIENTE: Rutinas
-  // ==========================
-  async function renderPatientRoutines(user) {
-    const routinesGrid = $("#routinesGrid");
-    if (!routinesGrid) return;
-
-    routinesGrid.innerHTML = `
-      <div class="col-span-1 md:col-span-2 lg:col-span-3">
-        <div class="bg-white rounded-lg border p-6 text-gray-600">
-          Cargando tus rutinas...
-        </div>
-      </div>`;
-
-    try {
-      const [all, assignedIds, progressMap] = await Promise.all([
-        apiGetAllRoutines(),
-        apiGetAssignedRoutineIds(),
-        apiGetProgressMap(),
-      ]);
-
-      const assignedSet = new Set(
-        assignedIds.map((id) => String(id))
-      );
-
-      const myRoutines = all.filter((r) =>
-        assignedSet.has(String(r.id || r._id))
-      );
-
-      routinesGrid.innerHTML = "";
-
-      if (!myRoutines.length) {
-        routinesGrid.innerHTML = `
-          <div class="col-span-1 md:col-span-2 lg:col-span-3">
-            <div class="bg-white rounded-lg border p-6 text-gray-600">
-              Aún no tienes rutinas asignadas. Usa “+ Seleccionar Rutina”.
-            </div>
-          </div>`;
-        return;
-      }
-
-      myRoutines.forEach((r) => {
-        const rid = String(r.id || r._id);
-        const prog = progressMap[rid] || {};
-        const total = r.days?.length || 3;
-
-        const daysDone = Array.isArray(prog.daysDone)
-          ? prog.daysDone
-          : Array.from({ length: total }, (_, i) =>
-              prog.completedDayCount ? i < prog.completedDayCount : false
-            );
-
-        const done = daysDone.filter(Boolean).length;
-        const pct = total ? Math.round((done / total) * 100) : 0;
-
-        const card = document.createElement("article");
-        card.className = "bg-white rounded-lg card-minimal p-5 border";
-        card.innerHTML = `
-          <h4 class="text-lg font-medium text-gray-800 mb-1">${
-            r.name || "Sin nombre"
-          }</h4>
-          <p class="text-sm text-gray-500 mb-2">${
-            r.category || "—"
-          } · ${r.difficulty || "—"} · ${r.duration || "—"} min</p>
-          <p class="text-gray-600 mb-4">${r.description || ""}</p>
-
-          <div class="mb-4">
-            <div class="flex justify-between text-xs text-gray-600 mb-1">
-              <span>Progreso</span><span>${done}/${total} (${pct}%)</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-green-500 h-2 rounded-full" style="width:${pct}%"></div>
-            </div>
-          </div>
-
-          <div class="flex gap-2">
-            <button class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700"
-                    data-act="start" data-id="${rid}">
-              ${done < total ? "Continuar" : "Revisar"}
-            </button>
-            <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200"
-                    data-act="details" data-id="${rid}">
-              Detalles
-            </button>
-          </div>
-        `;
-        routinesGrid.appendChild(card);
-      });
-    } catch (err) {
-      console.error(err);
-      notify("No se pudieron cargar tus rutinas", "error");
-      routinesGrid.innerHTML = `
-        <div class="col-span-1 md:col-span-2 lg:col-span-3">
-          <div class="bg-white rounded-lg border p-6 text-red-600">
-            Error al cargar rutinas.
-          </div>
-        </div>`;
-      return;
-    }
-
-    // Delegación de eventos para botones
-    routinesGrid.onclick = async (e) => {
-      const btn = e.target.closest("button[data-act]");
-      if (!btn) return;
-
-      const id = btn.dataset.id;
-      const all = await apiGetAllRoutines();
-      const routine = all.find(
-        (r) => String(r.id || r._id) === String(id)
-      );
-      if (!routine) return;
-
-      if (btn.dataset.act === "start") {
-        openExerciseScreen(routine);
-      } else if (btn.dataset.act === "details") {
-        openRoutineDetails(routine);
-      }
-    };
-  }
-
-  function openExerciseScreen(routine) {
-    const scr = $("#exerciseScreen");
-    if (!scr) return;
-
-    // Para determinar el siguiente día pendiente,
-    // en esta versión simplificada empezamos siempre en el día 1.
-    const dayIndex = 0;
-    const d =
-      routine.days?.[dayIndex] || {
-        name: "Ejercicio",
-        reps: "",
-        duration: 5,
-        instructions: [],
-      };
-
-    $("#exerciseTitle").textContent = routine.name;
-    $("#exerciseDay").textContent = `Día ${dayIndex + 1}`;
-    $("#currentExerciseName").textContent = d.name;
-    $("#currentExerciseReps").textContent = d.reps || "";
-    $("#exerciseDuration").textContent = (d.duration || 5) + " min";
-
-    const ul = $("#exerciseInstructions");
-    ul.innerHTML = "";
-    (d.instructions || []).forEach((t) => {
-      const li = document.createElement("li");
-      li.textContent = "• " + t;
-      ul.appendChild(li);
-    });
-
-    scr.dataset.routineId = String(routine.id || routine._id);
-    scr.dataset.dayIndex = String(dayIndex);
-
-    scr.classList.remove("hidden");
-  }
-
-  async function openRoutineDetails(routine) {
-    const modal = $("#routineDetailsModal");
-    if (!modal) return;
-
-    const progressMap = await apiGetProgressMap();
-    const rid = String(routine.id || routine._id);
-    const prog = progressMap[rid] || {};
-
-    $("#detailsRoutineName").textContent = routine.name || "Rutina";
-    $("#detailsCompletionDate").textContent = prog.completedAt
-      ? new Date(prog.completedAt).toLocaleString()
-      : "—";
-
-    const list = $("#exerciseDetailsList");
-    list.innerHTML = "";
-
-    const total = routine.days?.length || 3;
-    const daysDone = Array.isArray(prog.daysDone)
-      ? prog.daysDone
-      : Array.from({ length: total }, () => false);
-
-    (routine.days || []).forEach((d, i) => {
-      const doneIcon = daysDone[i] ? "✅" : "⬜";
-      const div = document.createElement("div");
-      div.className = "p-3 bg-gray-50 rounded";
-      div.innerHTML = `<strong>${doneIcon} Día ${
-        i + 1
-      }:</strong> ${d.name} — ${d.reps} (${d.duration} min)`;
-      list.appendChild(div);
-    });
-
-    modal.classList.remove("hidden");
-  }
-
-  // ==========================
-  //  Modal seleccionar rutina
-  // ==========================
+  // ======================================
+  // PACIENTE — seleccionar rutinas
+  // ======================================
   function setupSelectRoutine(user) {
     const modal = $("#routineModal");
     const grid = $("#availableRoutines");
     const btnOpen = $("#selectRoutineBtn");
     const btnCancel = $("#cancelRoutine");
+
     if (!modal || !grid || !btnOpen || !btnCancel) return;
 
     btnOpen.addEventListener("click", async () => {
@@ -473,16 +233,13 @@
           apiGetAllRoutines(),
           apiGetAssignedRoutineIds(),
         ]);
-        const assignedSet = new Set(
-          assignedIds.map((id) => String(id))
-        );
+        const assignedSet = new Set(assignedIds);
 
         grid.innerHTML = "";
         all.forEach((r) => {
-          const rid = String(r.id || r._id);
-          const yaTiene = assignedSet.has(rid);
+          const yaTiene = assignedSet.has(r.id);
           const card = document.createElement("article");
-          card.className = "border rounded-lg p-4";
+          card.className = "border rounded-lg p-4 bg-white";
           card.innerHTML = `
             <h4 class="font-medium text-gray-800">${r.name}</h4>
             <p class="text-sm text-gray-500 mb-2">${r.category} · ${
@@ -490,7 +247,7 @@
           } · ${r.duration} min</p>
             <p class="text-gray-600 mb-4">${r.description}</p>
             <button class="bg-green-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-700"
-                    data-id="${rid}" ${yaTiene ? "disabled" : ""}>
+                    data-id="${r.id}" ${yaTiene ? "disabled" : ""}>
               ${yaTiene ? "Ya asignada" : "Asignar a mi cuenta"}
             </button>
           `;
@@ -525,201 +282,183 @@
     btnCancel.addEventListener("click", () => modal.classList.add("hidden"));
   }
 
-  // ==========================
-  //  Terapeuta
-  // ==========================
-  let editingRoutineId = null;
+  // ======================================
+  // PACIENTE — Rutinas asignadas
+  // ======================================
+  function getNextDayIndex(routine, progressRecord) {
+    const total = routine.days?.length || 0;
+    const daysDone = Array.isArray(progressRecord?.daysDone)
+      ? progressRecord.daysDone.slice()
+      : Array.from({ length: total }, () => false);
 
-  async function refreshTherapistDashboard(user) {
-    const counters = {
-      created: $("#therapistRoutinesCount"),
-      activePatients: $("#activePatientsCount"),
-      completed: $("#completedTherapistRoutines"),
-      successRate: $("#successRate"),
-    };
-    const grid = $("#therapistRoutinesGrid");
+    const idx = daysDone.findIndex((v) => !v);
+    return idx === -1 ? total - 1 : idx;
+  }
+
+  async function renderPatientRoutines(user) {
+    const grid = $("#routinesGrid");
     if (!grid) return;
 
+    grid.innerHTML = `
+      <div class="col-span-1 md:col-span-2 lg:col-span-3">
+        <div class="bg-white rounded-lg border p-6 text-gray-600">
+          Cargando tus rutinas...
+        </div>
+      </div>`;
+
     try {
-      const [stats, routines] = await Promise.all([
-        apiGetTherapistStats(),
-        apiGetTherapistRoutines(),
+      const [all, assignedIds, progressMap] = await Promise.all([
+        apiGetAllRoutines(),
+        apiGetAssignedRoutineIds(),
+        apiGetProgressMap(),
       ]);
 
-      // Métricas
-      counters.created.textContent = stats.created ?? routines.length ?? 0;
-      counters.activePatients.textContent = stats.activePatients ?? 0;
-      counters.completed.textContent = stats.completed ?? 0;
-      counters.successRate.textContent = `${stats.successRate ?? 0}%`;
+      const assignedSet = new Set(assignedIds);
+      const myRoutines = all.filter((r) => assignedSet.has(r.id));
 
-      // Listado de rutinas
       grid.innerHTML = "";
-      routines.forEach((r) => {
-        const id = String(r.id || r._id);
+
+      if (!myRoutines.length) {
+        grid.innerHTML = `
+          <div class="col-span-1 md:col-span-2 lg:col-span-3">
+            <div class="bg-white rounded-lg border p-6 text-gray-600">
+              Aún no tienes rutinas asignadas. Usa “+ Seleccionar Rutina”.
+            </div>
+          </div>`;
+        return;
+      }
+
+      myRoutines.forEach((r) => {
+        const prog = progressMap[r.id] || {};
+        const total = r.days?.length || 0;
+
+        const daysDone = Array.isArray(prog.daysDone)
+          ? prog.daysDone
+          : Array.from({ length: total }, () => false);
+
+        const done = daysDone.filter(Boolean).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+
         const card = document.createElement("article");
-        card.className = "bg-white rounded-lg border p-5 relative";
+        card.className = "bg-white rounded-lg card-minimal p-5 border";
         card.innerHTML = `
-          <h4 class="text-lg font-medium text-gray-800 mb-1">${
-            r.name || "Sin nombre"
-          }</h4>
+          <h4 class="text-lg font-medium text-gray-800 mb-1">${r.name}</h4>
           <p class="text-sm text-gray-500 mb-2">${r.category} · ${
           r.difficulty
         } · ${r.duration} min</p>
-          <p class="text-gray-600 mb-4">${r.description || ""}</p>
+          <p class="text-gray-600 mb-4">${r.description}</p>
+
+          <div class="mb-4">
+            <div class="flex justify-between text-xs text-gray-600 mb-1">
+              <span>Progreso</span><span>${done}/${total} (${pct}%)</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-green-500 h-2 rounded-full" style="width:${pct}%"></div>
+            </div>
+          </div>
+
           <div class="flex gap-2">
-            <button class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs hover:bg-blue-700"
-                    data-act="edit" data-id="${id}">
-              Editar
+            <button class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700"
+                    data-act="start" data-id="${r.id}">
+              ${done < total ? "Continuar" : "Revisar"}
             </button>
-            <button class="bg-red-100 text-red-700 px-3 py-1.5 rounded-md text-xs hover:bg-red-200"
-                    data-act="delete" data-id="${id}">
-              Eliminar
+            <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200"
+                    data-act="details" data-id="${r.id}">
+              Detalles
             </button>
           </div>
         `;
         grid.appendChild(card);
       });
+
+      // Delegación de eventos
+      grid.onclick = (e) => {
+        const btn = e.target.closest("button[data-act]");
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const routine = myRoutines.find((r) => r.id === id);
+        if (!routine) return;
+
+        const prog = progressMap[id] || {};
+
+        if (btn.dataset.act === "start") {
+          openExerciseScreen(routine, prog);
+        } else if (btn.dataset.act === "details") {
+          openRoutineDetails(routine, prog);
+        }
+      };
     } catch (err) {
       console.error(err);
-      notify("No se pudieron cargar los datos del terapeuta", "error");
+      notify("No se pudieron cargar tus rutinas", "error");
     }
   }
 
-  async function setupTherapistCreate(user) {
-    const openBtn = $("#createRoutineBtn");
-    const modal = $("#createRoutineModal");
-    const closeA = $("#closeCreateRoutineModal");
-    const cancelA = $("#cancelCreateRoutine");
-    const form = $("#createRoutineForm");
-    const grid = $("#therapistRoutinesGrid");
+  function openExerciseScreen(routine, progressRecord) {
+    const scr = $("#exerciseScreen");
+    if (!scr) return;
 
-    if (!openBtn || !modal || !form || !grid) return;
-
-    function clearForm() {
-      editingRoutineId = null;
-      form.reset();
-    }
-
-    openBtn.addEventListener("click", () => {
-      clearForm();
-      modal.classList.remove("hidden");
-    });
-
-    closeA?.addEventListener("click", () => modal.classList.add("hidden"));
-    cancelA?.addEventListener("click", () => modal.classList.add("hidden"));
-
-    // Clicks en tarjetas (editar / eliminar)
-    grid.addEventListener("click", async (e) => {
-      const btn = e.target.closest("button[data-act]");
-      if (!btn) return;
-      const id = btn.dataset.id;
-
-      if (btn.dataset.act === "delete") {
-        if (!confirm("¿Seguro que deseas eliminar esta rutina?")) return;
-        try {
-          await apiDeleteRoutine(id);
-          notify("Rutina eliminada", "success");
-          cachedRoutines = [];
-          await refreshTherapistDashboard(user);
-        } catch (err) {
-          console.error(err);
-          notify("No se pudo eliminar la rutina", "error");
-        }
-        return;
-      }
-
-      if (btn.dataset.act === "edit") {
-        try {
-          const routines = await apiGetTherapistRoutines();
-          const r = routines.find(
-            (rr) => String(rr.id || rr._id) === String(id)
-          );
-          if (!r) return;
-
-          editingRoutineId = String(r.id || r._id);
-
-          $("#routineName").value = r.name || "";
-          $("#routineCategory").value = r.category || "";
-          $("#routineDifficulty").value = r.difficulty || "";
-          $("#routineDuration").value = r.duration || 0;
-          $("#routineDescription").value = r.description || "";
-
-          const days = r.days || [];
-          $("#exercise1Name").value = days[0]?.name || "";
-          $("#exercise1Reps").value = days[0]?.reps || "";
-          $("#exercise1Duration").value = days[0]?.duration || "";
-          $("#exercise2Name").value = days[1]?.name || "";
-          $("#exercise2Reps").value = days[1]?.reps || "";
-          $("#exercise2Duration").value = days[1]?.duration || "";
-          $("#exercise3Name").value = days[2]?.name || "";
-          $("#exercise3Reps").value = days[2]?.reps || "";
-          $("#exercise3Duration").value = days[2]?.duration || "";
-
-          modal.classList.remove("hidden");
-        } catch (err) {
-          console.error(err);
-          notify("No se pudo cargar la rutina para editar", "error");
-        }
-      }
-    });
-
-    // Guardar (crear / actualizar)
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const ownerId = user._id || user.id || user.email;
-
-      const payload = {
-        ownerId, // <- NECESARIO para que no truene el modelo en el backend
-        name: $("#routineName").value.trim(),
-        category: $("#routineCategory").value,
-        difficulty: $("#routineDifficulty").value,
-        duration: Number($("#routineDuration").value) || 0,
-        description: $("#routineDescription").value.trim(),
-        days: [
-          {
-            name: $("#exercise1Name").value.trim(),
-            reps: $("#exercise1Reps").value.trim(),
-            duration: Number($("#exercise1Duration").value) || 0,
-          },
-          {
-            name: $("#exercise2Name").value.trim(),
-            reps: $("#exercise2Reps").value.trim(),
-            duration: Number($("#exercise2Duration").value) || 0,
-          },
-          {
-            name: $("#exercise3Name").value.trim(),
-            reps: $("#exercise3Reps").value.trim(),
-            duration: Number($("#exercise3Duration").value) || 0,
-          },
-        ],
+    const dayIndex = getNextDayIndex(routine, progressRecord);
+    const d =
+      routine.days?.[dayIndex] || {
+        name: "Ejercicio",
+        reps: "",
+        duration: 5,
+        instructions: [],
       };
 
-      try {
-        if (editingRoutineId) {
-          await apiUpdateRoutine(editingRoutineId, payload);
-          notify("Rutina actualizada correctamente", "success");
-        } else {
-          await apiCreateRoutine(payload);
-          notify("Rutina creada correctamente", "success");
-        }
+    $("#exerciseTitle").textContent = routine.name;
+    $("#exerciseDay").textContent = `Día ${dayIndex + 1}`;
+    $("#currentExerciseName").textContent = d.name;
+    $("#currentExerciseReps").textContent = d.reps || "";
+    $("#exerciseDuration").textContent = (d.duration || 5) + " min";
 
-        modal.classList.add("hidden");
-        cachedRoutines = [];
-        await refreshTherapistDashboard(user);
-      } catch (err) {
-        console.error(err);
-        notify("No se pudo guardar la rutina", "error");
-      }
+    const ul = $("#exerciseInstructions");
+    ul.innerHTML = "";
+    (d.instructions || []).forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = "• " + t;
+      ul.appendChild(li);
     });
 
-    // Carga inicial del panel
-    refreshTherapistDashboard(user);
+    scr.dataset.routineId = routine.id;
+    scr.dataset.dayIndex = String(dayIndex);
+
+    scr.classList.remove("hidden");
   }
 
-  // ==========================
-  //  PROGRESO (paciente)
-  // ==========================
+  async function openRoutineDetails(routine, progressRecord) {
+    const modal = $("#routineDetailsModal");
+    if (!modal) return;
+
+    const total = routine.days?.length || 0;
+    const daysDone = Array.isArray(progressRecord?.daysDone)
+      ? progressRecord.daysDone
+      : Array.from({ length: total }, () => false);
+
+    $("#detailsRoutineName").textContent = routine.name;
+    $("#detailsCompletionDate").textContent = progressRecord?.completedAt
+      ? new Date(progressRecord.completedAt).toLocaleString()
+      : "—";
+
+    const list = $("#exerciseDetailsList");
+    list.innerHTML = "";
+
+    (routine.days || []).forEach((d, i) => {
+      const doneIcon = daysDone[i] ? "✅" : "⬜";
+      const div = document.createElement("div");
+      div.className = "p-3 bg-gray-50 rounded";
+      div.innerHTML = `<strong>${doneIcon} Día ${i + 1}:</strong> ${
+        d.name
+      } — ${d.reps} (${d.duration} min)`;
+      list.appendChild(div);
+    });
+
+    modal.classList.remove("hidden");
+  }
+
+  // ======================================
+  // PACIENTE — Progreso
+  // ======================================
   async function refreshProgressDashboard(user) {
     if (!user) return;
 
@@ -730,24 +469,17 @@
         apiGetProgressMap(),
       ]);
 
-      const assignedSet = new Set(
-        assignedIds.map((id) => String(id))
-      );
-      const myRoutines = all.filter((r) =>
-        assignedSet.has(String(r.id || r._id))
-      );
+      const assignedSet = new Set(assignedIds);
+      const myRoutines = all.filter((r) => assignedSet.has(r.id));
 
       const totalR = myRoutines.length;
       const completedR = myRoutines.filter((r) => {
-        const rid = String(r.id || r._id);
-        const rec = progressMap[rid];
+        const rec = progressMap[r.id];
         if (!rec) return false;
         if (Array.isArray(rec.daysDone))
-          return (
-            rec.daysDone.length &&
-            rec.daysDone.every((v) => v === true || v === 1)
-          );
-        return !!rec.completed;
+          return rec.daysDone.length &&
+            rec.daysDone.every((v) => v === true || v === 1);
+        return false;
       }).length;
 
       const completedSpan = $("#completedRoutines");
@@ -838,9 +570,233 @@
     ctx.strokeRect(padding - 6, padding - 6, chartW + 12, chartH + 12);
   }
 
-  // ==========================
-  //  Botones comunes
-  // ==========================
+  // ======================================
+  // TERAPEUTA — UI (crear/editar/eliminar)
+  // ======================================
+  function clearRoutineForm() {
+    $("#routineName").value = "";
+    $("#routineCategory").value = "";
+    $("#routineDifficulty").value = "";
+    $("#routineDuration").value = "";
+    $("#routineDescription").value = "";
+
+    $("#exercise1Name").value = "";
+    $("#exercise1Reps").value = "";
+    $("#exercise1Duration").value = "";
+
+    $("#exercise2Name").value = "";
+    $("#exercise2Reps").value = "";
+    $("#exercise2Duration").value = "";
+
+    $("#exercise3Name").value = "";
+    $("#exercise3Reps").value = "";
+    $("#exercise3Duration").value = "";
+  }
+
+  function fillRoutineFormFromRoutine(r) {
+    $("#routineName").value = r.name || "";
+    $("#routineCategory").value = r.category || "";
+    $("#routineDifficulty").value = r.difficulty || "";
+    $("#routineDuration").value = r.duration || "";
+    $("#routineDescription").value = r.description || "";
+
+    const d1 = r.days?.[0] || {};
+    const d2 = r.days?.[1] || {};
+    const d3 = r.days?.[2] || {};
+
+    $("#exercise1Name").value = d1.name || "";
+    $("#exercise1Reps").value = d1.reps || "";
+    $("#exercise1Duration").value = d1.duration || "";
+
+    $("#exercise2Name").value = d2.name || "";
+    $("#exercise2Reps").value = d2.reps || "";
+    $("#exercise2Duration").value = d2.duration || "";
+
+    $("#exercise3Name").value = d3.name || "";
+    $("#exercise3Reps").value = d3.reps || "";
+    $("#exercise3Duration").value = d3.duration || "";
+  }
+
+  function buildRoutinePayloadFromForm() {
+    const name = $("#routineName").value.trim();
+    const category = $("#routineCategory").value;
+    const difficulty = $("#routineDifficulty").value;
+    const duration = parseInt($("#routineDuration").value || "0", 10);
+    const description = $("#routineDescription").value.trim();
+
+    const days = [
+      {
+        name: $("#exercise1Name").value.trim(),
+        reps: $("#exercise1Reps").value.trim(),
+        duration: parseInt($("#exercise1Duration").value || "0", 10),
+        instructions: [],
+      },
+      {
+        name: $("#exercise2Name").value.trim(),
+        reps: $("#exercise2Reps").value.trim(),
+        duration: parseInt($("#exercise2Duration").value || "0", 10),
+        instructions: [],
+      },
+      {
+        name: $("#exercise3Name").value.trim(),
+        reps: $("#exercise3Reps").value.trim(),
+        duration: parseInt($("#exercise3Duration").value || "0", 10),
+        instructions: [],
+      },
+    ];
+
+    return { name, category, difficulty, duration, description, days };
+  }
+
+  async function refreshTherapistDashboard(user) {
+    try {
+      const [stats, routines] = await Promise.all([
+        apiGetTherapistStats(),
+        apiGetTherapistRoutines(),
+      ]);
+
+      therapistRoutinesCache = routines || [];
+
+      $("#therapistRoutinesCount").textContent = stats.totalCreated ?? 0;
+      $("#activePatientsCount").textContent = stats.activePatients ?? 0;
+      $("#completedTherapistRoutines").textContent =
+        stats.completedRoutines ?? 0;
+      $("#successRate").textContent = (stats.successRate ?? 0) + "%";
+
+      const grid = $("#therapistRoutinesGrid");
+      grid.innerHTML = "";
+
+      if (!therapistRoutinesCache.length) {
+        grid.innerHTML = `
+          <div class="col-span-1">
+            <div class="bg-white rounded-lg border p-6 text-gray-600">
+              Aún no has creado rutinas. Usa “+ Crear Nueva Rutina”.
+            </div>
+          </div>`;
+        return;
+      }
+
+      therapistRoutinesCache.forEach((r) => {
+        const card = document.createElement("article");
+        card.className = "bg-white rounded-lg border p-5";
+        card.innerHTML = `
+          <h4 class="text-lg font-medium text-gray-800 mb-1">${r.name}</h4>
+          <p class="text-sm text-gray-500 mb-2">${r.category} · ${
+          r.difficulty
+        } · ${r.duration} min</p>
+          <p class="text-gray-600 mb-4">${r.description}</p>
+          <div class="flex gap-2">
+            <button class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-700"
+                    data-act="edit" data-id="${r.id}">
+              Editar
+            </button>
+            <button class="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600"
+                    data-act="delete" data-id="${r.id}">
+              Eliminar
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    } catch (err) {
+      console.error(err);
+      notify("Error al cargar panel del terapeuta", "error");
+    }
+  }
+
+  function setupTherapistUI(user) {
+    const openBtn = $("#createRoutineBtn");
+    const modal = $("#createRoutineModal");
+    const closeBtn = $("#closeCreateRoutineModal");
+    const cancelBtn = $("#cancelCreateRoutine");
+    const form = $("#createRoutineForm");
+    const grid = $("#therapistRoutinesGrid");
+
+    if (!openBtn || !modal || !form || !grid) return;
+
+    // Abrir para CREAR
+    openBtn.addEventListener("click", () => {
+      currentEditingRoutineId = null;
+      clearRoutineForm();
+      modal.classList.remove("hidden");
+    });
+
+    const closeModal = () => {
+      modal.classList.add("hidden");
+      currentEditingRoutineId = null;
+    };
+
+    closeBtn?.addEventListener("click", closeModal);
+    cancelBtn?.addEventListener("click", closeModal);
+
+    // Submit (crear / editar)
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = buildRoutinePayloadFromForm();
+
+      if (
+        !payload.name ||
+        !payload.category ||
+        !payload.difficulty ||
+        !payload.duration
+      ) {
+        notify("Completa todos los campos de la rutina", "error");
+        return;
+      }
+
+      try {
+        if (currentEditingRoutineId) {
+          await apiUpdateRoutine(currentEditingRoutineId, payload);
+          notify("Rutina actualizada correctamente", "success");
+        } else {
+          await apiCreateRoutine(payload);
+          notify("Rutina creada correctamente", "success");
+        }
+
+        closeModal();
+        cachedRoutines = [];
+        await refreshTherapistDashboard(user);
+      } catch (err) {
+        console.error(err);
+        notify("Error al guardar la rutina", "error");
+      }
+    });
+
+    // Editar / eliminar desde el grid
+    grid.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-act]");
+      if (!btn) return;
+
+      const id = btn.dataset.id;
+      const routine = therapistRoutinesCache.find((r) => r.id === id);
+      if (!routine) return;
+
+      if (btn.dataset.act === "edit") {
+        currentEditingRoutineId = id;
+        fillRoutineFormFromRoutine(routine);
+        modal.classList.remove("hidden");
+      } else if (btn.dataset.act === "delete") {
+        const ok = window.confirm(
+          "¿Seguro que deseas eliminar esta rutina? Esta acción no se puede deshacer."
+        );
+        if (!ok) return;
+
+        try {
+          await apiDeleteRoutine(id);
+          notify("Rutina eliminada", "success");
+          cachedRoutines = [];
+          await refreshTherapistDashboard(user);
+        } catch (err) {
+          console.error(err);
+          notify("Error al eliminar la rutina", "error");
+        }
+      }
+    });
+  }
+
+  // ======================================
+  // Botones comunes
+  // ======================================
   function wireCommon(currentUser) {
     $("#logoutBtn")?.addEventListener("click", () => {
       localStorage.removeItem(STORAGE_CURRENT_USER);
@@ -872,15 +828,18 @@
 
       try {
         const all = await apiGetAllRoutines();
-        const routine = all.find(
-          (r) => String(r.id || r._id) === String(rid)
-        );
+        const routine = all.find((r) => r.id === rid);
         if (!routine) {
           $("#exerciseScreen")?.classList.add("hidden");
           return;
         }
 
-        await apiMarkDayDone(routine, dayIndex);
+        await apiMarkDayDone(
+          rid,
+          dayIndex,
+          routine.days?.length || 3,
+          routine.days?.[dayIndex]?.name || `Día ${dayIndex + 1}`
+        );
         $("#exerciseScreen")?.classList.add("hidden");
         await renderPatientRoutines(currentUser);
         await refreshProgressDashboard(currentUser);
@@ -892,9 +851,9 @@
     });
   }
 
-  // ==========================
-  //  Init
-  // ==========================
+  // ======================================
+  // INIT
+  // ======================================
   let currentUser = null;
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -917,7 +876,8 @@
       await renderPatientRoutines(currentUser);
       await refreshProgressDashboard(currentUser);
     } else if (role === "therapist") {
-      await setupTherapistCreate(currentUser);
+      setupTherapistUI(currentUser);
+      await refreshTherapistDashboard(currentUser);
     }
 
     notify(
@@ -928,3 +888,4 @@
     );
   });
 })();
+
