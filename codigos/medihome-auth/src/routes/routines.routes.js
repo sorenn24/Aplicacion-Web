@@ -185,7 +185,7 @@ router.get("/", async (_req, res) => {
 // GET /api/routines/assigned -> IDs rutinas asignadas al usuario
 router.get("/assigned", async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id || req.user.id;
     const progressDocs = await RoutineProgress.find({ userId }).select(
       "routineId"
     );
@@ -200,7 +200,7 @@ router.get("/assigned", async (req, res) => {
 // POST /api/routines/assign  {routineId}
 router.post("/assign", async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id || req.user.id;
     const { routineId } = req.body;
 
     const routine = await findAnyRoutine(routineId);
@@ -227,7 +227,7 @@ router.post("/assign", async (req, res) => {
 // GET /api/routines/progress -> todos los progresos del usuario
 router.get("/progress", async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id || req.user.id;
     const docs = await RoutineProgress.find({ userId }).lean();
     res.json(docs);
   } catch (err) {
@@ -240,7 +240,7 @@ router.get("/progress", async (req, res) => {
 // body: { routineId, dayIndex, totalDays, exerciseName }
 router.post("/progress", async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id || req.user.id;
     const { routineId, dayIndex, totalDays, exerciseName } = req.body;
 
     if (routineId == null || dayIndex == null) {
@@ -297,7 +297,7 @@ router.post("/progress", async (req, res) => {
 // GET /api/routines/therapist/mine -> rutinas creadas por este terapeuta
 router.get("/therapist/mine", async (req, res) => {
   try {
-    const therapistId = req.user._id;
+    const therapistId = req.user._id || req.user.id;
     const docs = await CustomRoutine.find({ ownerId: therapistId }).lean();
 
     const mapped = docs.map((r) => ({
@@ -315,7 +315,7 @@ router.get("/therapist/mine", async (req, res) => {
 // GET /api/routines/therapist/summary -> métricas panel terapeuta
 router.get("/therapist/summary", async (req, res) => {
   try {
-    const therapistId = req.user._id;
+    const therapistId = req.user._id || req.user.id;
 
     const routines = await CustomRoutine.find({ ownerId: therapistId }).lean();
     const routineIds = routines.map((r) => r._id.toString());
@@ -357,8 +357,7 @@ router.get("/therapist/summary", async (req, res) => {
 // POST /api/routines  -> crear rutina nueva (terapeuta)
 router.post("/", async (req, res) => {
   try {
-    // auth() en server.js ya debió validar el token y poner req.user
-    const therapistId = req.user && req.user._id;
+    const therapistId = req.user._id || req.user.id;
 
     if (!therapistId) {
       console.error("❌ POST /api/routines llegó sin req.user");
@@ -416,7 +415,7 @@ router.post("/", async (req, res) => {
 // PUT /api/routines/:id  -> editar rutina creada
 router.put("/:id", async (req, res) => {
   try {
-    const therapistId = req.user._id;
+    const therapistId = req.user._id || req.user.id;
     const { id } = req.params;
 
     const routine = await CustomRoutine.findOne({
@@ -460,7 +459,7 @@ router.put("/:id", async (req, res) => {
 // DELETE /api/routines/:id -> eliminar rutina creada
 router.delete("/:id", async (req, res) => {
   try {
-    const therapistId = req.user._id;
+    const therapistId = req.user._id || req.user.id;
     const { id } = req.params;
 
     const routine = await CustomRoutine.findOneAndDelete({
