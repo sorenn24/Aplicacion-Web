@@ -5,7 +5,7 @@ const CustomRoutine = require("../models/customRoutine.model");
 
 const router = express.Router();
 
-// === Catálogo base de rutinas (como las que tenías en el <script> del HTML) ===
+// ======================= CATÁLOGO BASE =======================
 const BASE_ROUTINES = [
   {
     id: "rtn-espalda-lumbar-suave",
@@ -144,9 +144,7 @@ const BASE_ROUTINES = [
   },
 ];
 
-// ===== Helpers =====
-
-// Busca rutina en catálogo base o en Mongo (CustomRoutine)
+// ===== Helper para buscar rutina en catálogo base o BD =====
 async function findAnyRoutine(routineId) {
   // 1) catálogo base
   const base = BASE_ROUTINES.find((r) => r.id === routineId);
@@ -179,12 +177,12 @@ router.get("/", async (_req, res) => {
 
     res.json([...BASE_ROUTINES, ...mappedCustom]);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error al obtener rutinas:", err);
     res.status(500).json({ message: "Error al obtener rutinas" });
   }
 });
 
-// GET /api/routines/assigned -> IDs de rutinas asignadas al usuario
+// GET /api/routines/assigned -> IDs rutinas asignadas al usuario
 router.get("/assigned", async (req, res) => {
   try {
     const userId = req.user._id;
@@ -194,7 +192,7 @@ router.get("/assigned", async (req, res) => {
     const ids = [...new Set(progressDocs.map((p) => p.routineId))];
     res.json(ids);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error al obtener rutinas asignadas:", err);
     res.status(500).json({ message: "Error al obtener rutinas asignadas" });
   }
 });
@@ -221,7 +219,7 @@ router.post("/assign", async (req, res) => {
 
     res.json({ ok: true, progress: doc });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error al asignar rutina:", err);
     res.status(500).json({ message: "Error al asignar rutina" });
   }
 });
@@ -233,7 +231,7 @@ router.get("/progress", async (req, res) => {
     const docs = await RoutineProgress.find({ userId }).lean();
     res.json(docs);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error al obtener progreso:", err);
     res.status(500).json({ message: "Error al obtener progreso" });
   }
 });
@@ -254,8 +252,9 @@ router.post("/progress", async (req, res) => {
 
     const doc = await RoutineProgress.findOne({ userId, routineId });
 
+    const routine = await findAnyRoutine(routineId);
     const total =
-      totalDays || (await findAnyRoutine(routineId))?.days?.length || 3;
+      totalDays || (routine && routine.days ? routine.days.length : 3);
 
     let daysDone;
     if (doc) {
@@ -288,7 +287,7 @@ router.post("/progress", async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error al actualizar progreso:", err);
     res.status(500).json({ message: "Error al actualizar progreso" });
   }
 });
@@ -308,7 +307,7 @@ router.get("/therapist/mine", async (req, res) => {
 
     res.json(mapped);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error al obtener rutinas del terapeuta:", err);
     res.status(500).json({ message: "Error al obtener rutinas del terapeuta" });
   }
 });
@@ -348,7 +347,7 @@ router.get("/therapist/summary", async (req, res) => {
       successRate,
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error al obtener resumen del terapeuta:", err);
     res
       .status(500)
       .json({ message: "Error al obtener resumen del terapeuta" });
@@ -358,15 +357,19 @@ router.get("/therapist/summary", async (req, res) => {
 // POST /api/routines  -> crear rutina nueva (terapeuta)
 router.post("/", async (req, res) => {
   try {
-    const therapistId = req.user?._id;
+    // auth() en server.js ya debió validar el token y poner req.user
+    const therapistId = req.user && req.user._id;
 
     if (!therapistId) {
-      return res.status(401).json({ message: "No autenticado" });
+      console.error("❌ POST /api/routines llegó sin req.user");
+      return res
+        .status(500)
+        .json({ message: "Error de sesión en el servidor" });
     }
 
     const { name, category, difficulty, duration, description, days } = req.body;
 
-    // Validación sencilla antes de lanzar Mongoose
+    // Validación sencilla
     if (
       !name ||
       !category ||
@@ -410,7 +413,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT /api/routines/:id  -> editar rutina creada por el terapeuta
+// PUT /api/routines/:id  -> editar rutina creada
 router.put("/:id", async (req, res) => {
   try {
     const therapistId = req.user._id;
@@ -427,33 +430,20 @@ router.put("/:id", async (req, res) => {
 
     const { name, category, difficulty, duration, description, days } = req.body;
 
-    if (
-      !name ||
-      !category ||
-      !difficulty ||
-      !description ||
-      duration == null ||
-      !Array.isArray(days) ||
-      !days.length
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Datos incompletos para actualizar la rutina" });
+    routine.name = name || routine.name;
+    routine.category = category || routine.category;
+    routine.difficulty = difficulty || routine.difficulty;
+    routine.duration =
+      duration != null ? Number(duration) : routine.duration;
+    routine.description = description || routine.description;
+    if (Array.isArray(days) && days.length) {
+      routine.days = days.map((d) => ({
+        name: d.name || "Ejercicio",
+        reps: d.reps || "",
+        duration: Number(d.duration) || 5,
+        instructions: Array.isArray(d.instructions) ? d.instructions : [],
+      }));
     }
-
-    const normalizedDays = days.map((d) => ({
-      name: d.name || "Ejercicio",
-      reps: d.reps || "",
-      duration: Number(d.duration) || 5,
-      instructions: Array.isArray(d.instructions) ? d.instructions : [],
-    }));
-
-    routine.name = name;
-    routine.category = category;
-    routine.difficulty = difficulty;
-    routine.duration = Number(duration);
-    routine.description = description;
-    routine.days = normalizedDays;
 
     await routine.save();
 
@@ -467,7 +457,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/routines/:id -> eliminar rutina creada por el terapeuta
+// DELETE /api/routines/:id -> eliminar rutina creada
 router.delete("/:id", async (req, res) => {
   try {
     const therapistId = req.user._id;
@@ -482,7 +472,7 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Rutina no encontrada" });
     }
 
-    // Opcional: borrar progresos relacionados a esa rutina
+    // Opcional: borrar progresos relacionados
     await RoutineProgress.deleteMany({ routineId: id });
 
     res.json({ ok: true });
