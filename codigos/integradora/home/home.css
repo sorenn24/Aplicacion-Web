@@ -6,7 +6,8 @@ body {
 /* ==========================
    BOTONES PERSONALIZADOS
    ========================== */
-.btn-terapeuta, .btn-paciente {
+.btn-terapeuta,
+.btn-paciente {
   display: inline-block;
   padding: 0.75rem 2.5rem;
   border-radius: 0.75rem;
@@ -58,3 +59,73 @@ body {
     transform: translateY(0);
   }
 }
+
+/* ==========================
+   TARJETAS 3D / SECCIONES
+   ========================== */
+
+.section-3d {
+  perspective: 1200px;
+}
+
+.card-3d {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.75rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.card-3d:hover {
+  transform: translateY(-10px) rotateX(6deg) rotateY(-4deg);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
+}
+
+/* pequeña “línea” degradada arriba de algunas secciones */
+.section-divider {
+  border-top: 4px solid transparent;
+  border-image: linear-gradient(to right, #6366f1, #a855f7, #ec4899) 1;
+}
+
+/* Chips de información */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+/* Para los logotipos/referencias */
+.badge-ref {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(129, 140, 248, 0.09);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+/* efecto flotante suave */
+.float-soft {
+  animation: floatSoft 6s ease-in-out infinite;
+}
+
+@keyframes floatSoft {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
