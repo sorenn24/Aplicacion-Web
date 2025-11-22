@@ -4,143 +4,82 @@ body {
 }
 
 /* ==========================
-   HERO + FONDO ANIMADO 3D
+   FONDO HOLOGRÁFICO GLOBAL
    ========================== */
 
-.hero-section {
+.holo-bg {
   position: relative;
-  overflow: hidden;
+  min-height: 100vh;
+  /* degradado base para todo el scroll */
+  background:
+    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.18), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.2), transparent 55%),
+    linear-gradient(135deg, #4f46e5 0%, #8b5cf6 40%, #ec4899 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
 }
 
-/* Capa de partículas / puntos flotando */
-.hero-section::before {
+/* anillo holográfico “médico” fijo en el centro de la pantalla */
+.holo-bg::before {
   content: "";
-  position: absolute;
-  inset: -20%;
-  background-image:
-    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.12) 0, transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(34, 211, 238, 0.18) 0, transparent 50%),
-    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.18) 0, transparent 50%),
-    radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.16) 0, transparent 45%);
-  opacity: 0.85;
-  filter: blur(1px);
-  z-index: 0;
-  animation: heroBgDrift 25s linear infinite alternate;
+  position: fixed;
+  inset: 10% 15%;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.35), transparent 60%),
+    conic-gradient(
+      from 0deg,
+      rgba(59, 130, 246, 0.0),
+      rgba(59, 130, 246, 0.7),
+      rgba(45, 212, 191, 0.0),
+      rgba(236, 72, 153, 0.7),
+      rgba(59, 130, 246, 0.0)
+    );
+  mix-blend-mode: screen;
+  filter: blur(14px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: -1;
+  animation: hologramSpin 22s linear infinite;
 }
 
-/* Capa tipo “grid/holograma” suave */
-.hero-section::after {
+/* partículas / puntos suaves en todo el fondo */
+.holo-bg::after {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(
-      rgba(255, 255, 255, 0.06) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.06) 1px,
-      transparent 1px
-    );
-  background-size: 80px 80px;
-  opacity: 0.4;
-  mix-blend-mode: screen;
-  z-index: 0;
-  animation: hologramGrid 16s linear infinite;
-}
-
-/* Contenido del hero por encima del fondo */
-.hero-content {
-  position: relative;
-  z-index: 2;
-}
-
-/* Anillo tipo holograma médico detrás del texto */
-.hero-content::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: -40px;
-  width: 220px;
-  height: 220px;
-  transform: translateX(-50%);
-  border-radius: 9999px;
-  border: 1px solid rgba(59, 130, 246, 0.7);
-  box-shadow:
-    0 0 40px rgba(59, 130, 246, 0.55),
-    inset 0 0 40px rgba(56, 189, 248, 0.25);
-  opacity: 0.55;
-  filter: blur(0.3px);
+    radial-gradient(circle at 10% 20%, rgba(248, 250, 252, 0.25) 0, transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(248, 250, 252, 0.28) 0, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(248, 250, 252, 0.22) 0, transparent 55%);
+  opacity: 0.45;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
   z-index: -1;
-  animation: hologramPulse 3.8s ease-in-out infinite;
+  animation: floatDots 18s ease-in-out infinite alternate;
 }
 
-/* Línea “scanner” que pasa por el círculo */
-.hero-content::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: -140px;
-  width: 260px;
-  height: 260px;
-  transform: translateX(-50%) rotate(12deg);
-  border-radius: 9999px;
-  border-top: 2px solid rgba(165, 243, 252, 0.9);
-  border-bottom: 2px solid transparent;
-  border-left: 2px solid transparent;
-  border-right: 2px solid transparent;
-  opacity: 0.9;
-  z-index: -1;
-  animation: scannerRotate 10s linear infinite;
-}
-
-/* Animaciones del fondo y holograma */
-@keyframes heroBgDrift {
+@keyframes hologramSpin {
   0% {
-    transform: translate3d(0, 0, 0) scale(1.05);
+    transform: rotate(0deg) scale(1);
   }
   50% {
-    transform: translate3d(-20px, 10px, 0) scale(1.08);
+    transform: rotate(180deg) scale(1.03);
   }
   100% {
-    transform: translate3d(20px, -15px, 0) scale(1.1);
+    transform: rotate(360deg) scale(1);
   }
 }
 
-@keyframes hologramGrid {
+@keyframes floatDots {
   0% {
-    transform: translateY(0) translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translateY(-16px) translateX(8px);
+    transform: translate3d(-18px, -12px, 0);
   }
   100% {
-    transform: translateY(0) translateX(0);
-  }
-}
-
-@keyframes hologramPulse {
-  0% {
-    transform: translateX(-50%) scale(0.96);
-    opacity: 0.35;
-  }
-  50% {
-    transform: translateX(-50%) scale(1.04);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateX(-50%) scale(0.96);
-    opacity: 0.35;
-  }
-}
-
-@keyframes scannerRotate {
-  0% {
-    transform: translateX(-50%) rotate(0deg);
-  }
-  100% {
-    transform: translateX(-50%) rotate(360deg);
+    transform: translate3d(18px, 14px, 0);
   }
 }
 
@@ -182,7 +121,7 @@ body {
 }
 
 /* ==========================
-   ANIMACIONES GENERALES
+   ANIMACIONES
    ========================== */
 .fade-in {
   opacity: 0;
@@ -210,13 +149,14 @@ body {
 }
 
 .card-3d {
-  background: white;
+  background: rgba(255, 255, 255, 0.94);
   border-radius: 1rem;
   border: 1px solid #e5e7eb;
   padding: 1.75rem;
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
   transform-style: preserve-3d;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .card-3d:hover {
@@ -238,7 +178,8 @@ body {
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
-  background: rgba(15, 23, 42, 0.04);
+  background: rgba(15, 23, 42, 0.2);
+  color: #f9fafb;
 }
 
 /* Para los logotipos/referencias */
@@ -253,7 +194,7 @@ body {
   border: 1px solid rgba(129, 140, 248, 0.3);
 }
 
-/* efecto flotante suave para tarjetas */
+/* efecto flotante suave (para tarjetas o elementos) */
 .float-soft {
   animation: floatSoft 6s ease-in-out infinite;
 }
@@ -269,5 +210,4 @@ body {
     transform: translateY(0px);
   }
 }
-
 
