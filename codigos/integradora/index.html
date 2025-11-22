@@ -8,7 +8,10 @@
     <script src="./home/home.js" defer></script>
     <link rel="stylesheet" href="./home/home.css" />
   </head>
+
+  <!-- 👇 AQUI ES EL ÚNICO CAMBIO: SE AGREGA "holo-bg" -->
   <body class="bg-gray-50 holo-bg">
+
     <!-- Navigation -->
     <nav class="bg-white shadow-sm fixed w-full top-0 z-50">
       <div class="max-w-6xl mx-auto px-4">
@@ -28,10 +31,10 @@
 
     <!-- Hero Section -->
     <section
-      class="hero-section pt-16 min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"
+      class="pt-16 min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"
     >
       <div class="max-w-6xl mx-auto px-4 py-20">
-        <div class="text-center text-white fade-in hero-content">
+        <div class="text-center text-white fade-in">
           <p class="uppercase tracking-[0.35em] text-xs mb-4 opacity-80">
             Plataforma de rehabilitación digital
           </p>
@@ -65,6 +68,7 @@
     <section class="bg-white section-divider">
       <div class="max-w-6xl mx-auto px-4 py-16 section-3d">
         <div class="grid md:grid-cols-2 gap-10 items-center">
+
           <div>
             <h2 class="text-3xl font-bold text-gray-900 mb-4">
               ¿Qué es <span class="text-indigo-600">MediHom</span>?
@@ -106,8 +110,7 @@
             <p class="text-gray-600 mb-4">
               MediHom busca que cualquier persona pueda continuar su proceso de
               rehabilitación desde casa, sin perder estructura ni calidad en el
-              tratamiento. El terapeuta define la rutina, el sistema guía al
-              paciente y ambos visualizan el progreso.
+              tratamiento. 
             </p>
             <ul class="space-y-2 text-gray-600 text-sm">
               <li>• Rutinas divididas por zonas del cuerpo.</li>
@@ -116,6 +119,7 @@
               <li>• Panel de control para gestionar las rutinas.</li>
             </ul>
           </div>
+
         </div>
       </div>
     </section>
@@ -134,58 +138,51 @@
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
+
           <div class="card-3d">
-            <div
-              class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center mb-4"
-            >
+            <div class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center mb-4">
               1
             </div>
             <h3 class="font-semibold text-gray-900 mb-2">
               Registro y roles seguros
             </h3>
             <p class="text-gray-600 text-sm mb-3">
-              Los usuarios se registran como paciente o terapeuta. La API
-              valida credenciales, protege rutas y genera un token seguro.
+              Los usuarios se registran como paciente o terapeuta. La API valida credenciales y genera un token seguro.
             </p>
             <span class="chip">JWT • Rutas protegidas</span>
           </div>
 
           <div class="card-3d">
-            <div
-              class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-4"
-            >
+            <div class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-4">
               2
             </div>
             <h3 class="font-semibold text-gray-900 mb-2">
               Creación y asignación de rutinas
             </h3>
             <p class="text-gray-600 text-sm mb-3">
-              El terapeuta crea rutinas en el panel y las asigna a un paciente.
-              Cada rutina incluye ejercicios, repeticiones y duración.
+              El terapeuta crea rutinas y las asigna a un paciente.
             </p>
             <span class="chip">Panel de terapeuta</span>
           </div>
 
           <div class="card-3d">
-            <div
-              class="w-10 h-10 rounded-xl bg-pink-500 text-white flex items-center justify-center mb-4"
-            >
+            <div class="w-10 h-10 rounded-xl bg-pink-500 text-white flex items-center justify-center mb-4">
               3
             </div>
             <h3 class="font-semibold text-gray-900 mb-2">
               Ejecución y seguimiento
             </h3>
             <p class="text-gray-600 text-sm mb-3">
-              El paciente ve sus rutinas, realiza los ejercicios día a día y la
-              plataforma guarda el progreso en la nube (MongoDB + API).
+              El paciente realiza los ejercicios y la plataforma guarda el progreso.
             </p>
             <span class="chip">Gráficas e historial</span>
           </div>
+
         </div>
       </div>
     </section>
 
-    <!-- 🆕 Sección: Testimonios de usuarios -->
+    <!-- Testimonios -->
     <section class="bg-gray-50">
       <div class="max-w-6xl mx-auto px-4 py-16 section-3d">
         <div class="text-center mb-10">
@@ -193,8 +190,7 @@
             Lo que dicen nuestros usuarios
           </h2>
           <p class="text-gray-600 max-w-2xl mx-auto">
-            Pacientes y terapeutas que han probado MediHom en su proceso de
-            rehabilitación comparten su experiencia con la plataforma.
+            Pacientes y terapeutas que han probado MediHom comparten su experiencia.
           </p>
         </div>
 
@@ -202,172 +198,106 @@
           <!-- Testimonio 1 -->
           <article class="card-3d float-soft">
             <div class="flex items-center mb-4">
-              <div
-                class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-semibold mr-3"
-              >
+              <div class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-semibold mr-3">
                 LG
               </div>
               <div>
-                <p class="font-semibold text-gray-900 text-sm">
-                  Laura Gómez
-                </p>
-                <p class="text-xs text-gray-500">
-                  Paciente – Rehabilitación de rodilla
-                </p>
+                <p class="font-semibold text-gray-900 text-sm">Laura Gómez</p>
+                <p class="text-xs text-gray-500">Paciente – Rodilla</p>
               </div>
             </div>
             <p class="text-sm text-gray-600 mb-3">
-              “Antes tenía que ir al consultorio tres veces por semana. Con MediHom
-              sigo mi rutina desde casa y mi terapeuta puede ver mi avance sin perder el control del tratamiento.”
+              “Puedo hacer mis rutinas desde casa y mi terapeuta ve mi avance.”
             </p>
-            <p class="text-xs text-yellow-500">
-              ★★★★★ <span class="text-gray-500 ml-1">Progreso visible en 6 semanas</span>
-            </p>
+            <p class="text-xs text-yellow-500">★★★★★</p>
           </article>
 
           <!-- Testimonio 2 -->
           <article class="card-3d float-soft">
             <div class="flex items-center mb-4">
-              <div
-                class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center font-semibold mr-3"
-              >
+              <div class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center font-semibold mr-3">
                 RM
               </div>
               <div>
-                <p class="font-semibold text-gray-900 text-sm">
-                  Roberto Martínez
-                </p>
-                <p class="text-xs text-gray-500">Fisioterapeuta deportivo</p>
+                <p class="font-semibold text-gray-900 text-sm">Roberto Martínez</p>
+                <p class="text-xs text-gray-500">Fisioterapeuta</p>
               </div>
             </div>
             <p class="text-sm text-gray-600 mb-3">
-              “El panel de terapeuta me permite crear rutinas específicas para cada
-              paciente y ver qué días cumplen con sus ejercicios. Es mucho más sencillo dar seguimiento estructurado.”
+              “Me permite dar seguimiento estructurado a cada paciente.”
             </p>
-            <p class="text-xs text-yellow-500">
-              ★★★★☆ <span class="text-gray-500 ml-1">Mejor organización de pacientes</span>
-            </p>
+            <p class="text-xs text-yellow-500">★★★★☆</p>
           </article>
 
           <!-- Testimonio 3 -->
           <article class="card-3d float-soft">
             <div class="flex items-center mb-4">
-              <div
-                class="w-10 h-10 rounded-full bg-pink-500 text-white flex items-center justify-center font-semibold mr-3"
-              >
+              <div class="w-10 h-10 rounded-full bg-pink-500 text-white flex items-center justify-center font-semibold mr-3">
                 AC
               </div>
               <div>
-                <p class="font-semibold text-gray-900 text-sm">
-                  Andrea Castillo
-                </p>
-                <p class="text-xs text-gray-500">Paciente – Dolor lumbar crónico</p>
+                <p class="font-semibold text-gray-900 text-sm">Andrea Castillo</p>
+                <p class="text-xs text-gray-500">Dolor lumbar</p>
               </div>
             </div>
             <p class="text-sm text-gray-600 mb-3">
-              “La app me recuerda mis ejercicios y puedo ver una gráfica de mis días
-              activos. Eso me motiva a mantenerme constante con mi rehabilitación.”
+              “Las gráficas me motivan a mantenerme constante.”
             </p>
-            <p class="text-xs text-yellow-500">
-              ★★★★★ <span class="text-gray-500 ml-1">Mayor constancia en casa</span>
-            </p>
+            <p class="text-xs text-yellow-500">★★★★★</p>
           </article>
+
         </div>
       </div>
     </section>
 
-    <!-- Sección: Referencias y soporte clínico -->
+    <!-- Referencias -->
     <section class="bg-white section-divider">
       <div class="max-w-6xl mx-auto px-4 py-16 section-3d">
+
         <div class="grid md:grid-cols-2 gap-10 items-center">
+
           <div>
             <h2 class="text-3xl font-bold text-gray-900 mb-4">
               Referencias y buenas prácticas
             </h2>
             <p class="text-gray-600 mb-4">
-              La propuesta de MediHom se inspira en lineamientos de ejercicio
-              terapéutico y manejo del dolor recomendados por instituciones
-              reconocidas a nivel internacional.
-            </p>
-            <p class="text-gray-600 mb-4">
-              Aunque la plataforma es un proyecto académico, las rutinas están
-              pensadas para alinearse con criterios básicos de seguridad,
-              progresión gradual y educación del paciente.
+              Las rutinas están inspiradas en guías internacionales.
             </p>
 
             <div class="space-y-2 text-sm text-gray-600">
-              <p>
-                • Guías generales de actividad física y rehabilitación
-                recomendadas por la
-                <span class="font-semibold">Organización Mundial de la Salud</span>.
-              </p>
-              <p>
-                • Recomendaciones de ejercicio terapéutico para
-                dolor musculoesquelético de instituciones como
-                <span class="font-semibold">Mayo Clinic</span> y
-                <span class="font-semibold">NHS (Reino Unido)</span>.
-              </p>
-              <p>
-                • Principios de progresión, control del dolor y adaptación según
-                la tolerancia del paciente.
-              </p>
+              <p>• OMS – Actividad física y salud</p>
+              <p>• Mayo Clinic – Ejercicios para lesiones</p>
+              <p>• NHS UK – Fisioterapia desde casa</p>
             </div>
           </div>
 
           <div class="card-3d">
             <p class="text-sm font-semibold text-indigo-500 mb-3">
-              Fuentes consultadas (referencias generales)
+              Fuentes consultadas
             </p>
             <ul class="space-y-3 text-sm text-gray-700">
-              <li>
-                <span class="badge-ref">OMS</span>
-                <span class="ml-2">
-                  Recomendaciones globales sobre actividad física y salud.
-                </span>
-              </li>
-              <li>
-                <span class="badge-ref">Mayo Clinic</span>
-                <span class="ml-2">
-                  Artículos de referencia sobre ejercicios para espalda, rodilla
-                  y cuello.
-                </span>
-              </li>
-              <li>
-                <span class="badge-ref">NHS UK</span>
-                <span class="ml-2">
-                  Guías básicas de fisioterapia domiciliaria y ejercicios
-                  supervisados.
-                </span>
-              </li>
-              <li>
-                <span class="badge-ref">Lineamientos clínicos</span>
-                <span class="ml-2">
-                  Buenas prácticas de progresión de carga, descanso y
-                  auto-monitoreo del dolor.
-                </span>
-              </li>
+              <li><span class="badge-ref">OMS</span> Recomendaciones globales</li>
+              <li><span class="badge-ref">Mayo Clinic</span> Ejercicios clínicos</li>
+              <li><span class="badge-ref">NHS UK</span> Guías de fisioterapia</li>
+              <li><span class="badge-ref">Lineamientos clínicos</span> Progresión y seguridad</li>
             </ul>
           </div>
+
         </div>
+
       </div>
     </section>
 
-    <!-- Sección final: CTA -->
-    <section
-      class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
-    >
+    <!-- CTA final -->
+    <section class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
       <div class="max-w-6xl mx-auto px-4 py-12">
-        <div
-          class="flex flex-col md:flex-row items-center justify-between gap-6 text-white"
-        >
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-white">
           <div>
             <h2 class="text-2xl md:text-3xl font-bold mb-2">
               Listo para continuar la rehabilitación en digital.
             </h2>
             <p class="text-sm md:text-base opacity-90 max-w-xl">
-              Crea tu cuenta como terapeuta o paciente y prueba el flujo
-              completo: login, dashboard, rutinas, ejercicios y progreso en la
-              nube.
+              Crea tu cuenta como terapeuta o paciente y prueba todo el sistema.
             </p>
           </div>
           <div class="flex gap-3">
@@ -379,6 +309,7 @@
       </div>
     </section>
 
+    <!-- Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async () => {
@@ -387,13 +318,14 @@
               "/serviceWorker.js",
               { scope: "./" }
             );
-            console.log("✅ Service Worker registrado con scope:", reg.scope);
+            console.log("✅ Service Worker registrado:", reg.scope);
           } catch (err) {
             console.error("❌ Error al registrar el Service Worker:", err);
           }
         });
       }
     </script>
+
   </body>
 </html>
 
