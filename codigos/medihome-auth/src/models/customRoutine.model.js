@@ -3,10 +3,10 @@ const mongoose = require("mongoose");
 
 const DaySchema = new mongoose.Schema(
   {
-    name: String,
-    reps: String,
-    duration: Number,
-    instructions: [String],
+    name: { type: String, required: true },
+    reps: { type: String, required: true },
+    duration: { type: Number, required: true },
+    instructions: { type: [String], default: [] },
   },
   { _id: false }
 );
@@ -18,7 +18,7 @@ const CustomRoutineSchema = new mongoose.Schema(
     difficulty: { type: String, required: true },
     duration: { type: Number, required: true },
     description: { type: String, required: true },
-    days: { type: [DaySchema], default: [] },
+    days: { type: [DaySchema], required: true },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
