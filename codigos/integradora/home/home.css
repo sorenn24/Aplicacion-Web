@@ -4,6 +4,147 @@ body {
 }
 
 /* ==========================
+   HERO + FONDO ANIMADO 3D
+   ========================== */
+
+.hero-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Capa de partículas / puntos flotando */
+.hero-section::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.12) 0, transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(34, 211, 238, 0.18) 0, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.18) 0, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.16) 0, transparent 45%);
+  opacity: 0.85;
+  filter: blur(1px);
+  z-index: 0;
+  animation: heroBgDrift 25s linear infinite alternate;
+}
+
+/* Capa tipo “grid/holograma” suave */
+.hero-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px
+    );
+  background-size: 80px 80px;
+  opacity: 0.4;
+  mix-blend-mode: screen;
+  z-index: 0;
+  animation: hologramGrid 16s linear infinite;
+}
+
+/* Contenido del hero por encima del fondo */
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Anillo tipo holograma médico detrás del texto */
+.hero-content::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -40px;
+  width: 220px;
+  height: 220px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  border: 1px solid rgba(59, 130, 246, 0.7);
+  box-shadow:
+    0 0 40px rgba(59, 130, 246, 0.55),
+    inset 0 0 40px rgba(56, 189, 248, 0.25);
+  opacity: 0.55;
+  filter: blur(0.3px);
+  z-index: -1;
+  animation: hologramPulse 3.8s ease-in-out infinite;
+}
+
+/* Línea “scanner” que pasa por el círculo */
+.hero-content::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -140px;
+  width: 260px;
+  height: 260px;
+  transform: translateX(-50%) rotate(12deg);
+  border-radius: 9999px;
+  border-top: 2px solid rgba(165, 243, 252, 0.9);
+  border-bottom: 2px solid transparent;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  opacity: 0.9;
+  z-index: -1;
+  animation: scannerRotate 10s linear infinite;
+}
+
+/* Animaciones del fondo y holograma */
+@keyframes heroBgDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-20px, 10px, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(20px, -15px, 0) scale(1.1);
+  }
+}
+
+@keyframes hologramGrid {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-16px) translateX(8px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes hologramPulse {
+  0% {
+    transform: translateX(-50%) scale(0.96);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.04);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-50%) scale(0.96);
+    opacity: 0.35;
+  }
+}
+
+@keyframes scannerRotate {
+  0% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  100% {
+    transform: translateX(-50%) rotate(360deg);
+  }
+}
+
+/* ==========================
    BOTONES PERSONALIZADOS
    ========================== */
 .btn-terapeuta,
@@ -41,7 +182,7 @@ body {
 }
 
 /* ==========================
-   ANIMACIONES
+   ANIMACIONES GENERALES
    ========================== */
 .fade-in {
   opacity: 0;
@@ -112,7 +253,7 @@ body {
   border: 1px solid rgba(129, 140, 248, 0.3);
 }
 
-/* efecto flotante suave */
+/* efecto flotante suave para tarjetas */
 .float-soft {
   animation: floatSoft 6s ease-in-out infinite;
 }
@@ -128,4 +269,5 @@ body {
     transform: translateY(0px);
   }
 }
+
 
