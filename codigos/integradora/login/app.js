@@ -1,30 +1,35 @@
-// app.js — Login/Registro (Back-End API + JWT) — exclusivo del LOGIN
+// integradora/login/app.js
 (function () {
   "use strict";
 
   const $ = (sel) => document.querySelector(sel);
 
-  // ===== API base =====
-  // ⬇⬇⬇ AHORA usando tu backend en Render
-  const API_URL = "https://medihom-web.onrender.com/api/auth";
-  const STORAGE_CURRENT = "currentUser";
-  const STORAGE_TOKEN = "auth_token";
+  // ================= API base =================
+  const API_URL = window.location.origin.includes("localhost")
+    ? "http://localhost:4000/api/auth"
+    : "https://medihom-web.onrender.com/api/auth";
 
-  // ===== Notificaciones simples (igual que tu versión) =====
+  const STORAGE_CURRENT = "currentUser";
+  const STORAGE_TOKEN   = "auth_token";
+
+  // ================= Notificaciones =================
   function notify(msg, type = "info") {
     const box = $("#notifications");
     if (!box) { alert(msg); return; }
     const el = document.createElement("div");
     el.className =
       "px-4 py-3 rounded-xl shadow text-white text-sm " +
-      (type === "error" ? "bg-red-500" :
-       type === "success" ? "bg-green-600" : "bg-gray-800");
+      (type === "error"
+        ? "bg-red-500"
+        : type === "success"
+        ? "bg-green-600"
+        : "bg-gray-800");
     el.textContent = msg;
     box.appendChild(el);
     setTimeout(() => el.remove(), 3500);
   }
 
-  // ===== Helpers de sesión =====
+  // ================= Helpers sesión =================
   function setCurrentUser(user) {
     localStorage.setItem(STORAGE_CURRENT, JSON.stringify(user));
   }
@@ -43,7 +48,7 @@
     return localStorage.getItem(STORAGE_TOKEN);
   }
 
-  // ===== Validaciones =====
+  // ================= Validaciones =================
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
@@ -51,7 +56,7 @@
     return typeof pw === "string" && pw.length >= 6;
   }
 
-  // ===== UI: toggle entre Login y Registro =====
+  // ================= UI: login vs registro =================
   function showLogin() {
     $("#loginScreen")?.classList.remove("hidden");
     $("#registerScreen")?.classList.add("hidden");
@@ -61,34 +66,35 @@
     $("#loginScreen")?.classList.add("hidden");
   }
 
-  // ===== Handlers (ahora contra la API en Render) =====
+  // ================= Handlers =================
   async function onLoginSubmit(e) {
     e.preventDefault();
     const email = $("#loginEmail")?.value.trim();
     const password = $("#loginPassword")?.value;
 
     if (!isValidEmail(email)) return notify("Correo inválido", "error");
-    if (!isValidPassword(password)) return notify("La contraseña debe tener mínimo 6 caracteres", "error");
+    if (!isValidPassword(password)) {
+      return notify("La contraseña debe tener mínimo 6 caracteres", "error");
+    }
 
     try {
       const res = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // credentials: "include", // si luego usas cookies httpOnly
         body: JSON.stringify({ email, password })
       });
+
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         return notify(data.message || "Credenciales incorrectas", "error");
       }
 
       // Guardar token y usuario
-      if (data.token) setToken(data.token);
-      if (data.user) setCurrentUser(data.user);
+      setToken(data.token);
+      setCurrentUser(data.user);
 
       notify("Ingreso exitoso", "success");
-
-      // ⬇⬇⬇ redirigir al dashboard del Static Site
       window.location.href = "../dashboard/dashboard.html";
     } catch (err) {
       console.error(err);
@@ -98,22 +104,24 @@
 
   async function onRegisterSubmit(e) {
     e.preventDefault();
-    const name = $("#registerName")?.value.trim();
-    const email = $("#registerEmail")?.value.trim();
+    const name     = $("#registerName")?.value.trim();
+    const email    = $("#registerEmail")?.value.trim();
     const password = $("#registerPassword")?.value;
-    const role = $("#registerRole")?.value || "patient"; // mantiene tu selector
+    const role     = $("#registerRole")?.value || "patient";
 
     if (!name) return notify("El nombre es obligatorio", "error");
     if (!isValidEmail(email)) return notify("Correo inválido", "error");
-    if (!isValidPassword(password)) return notify("La contraseña debe tener mínimo 6 caracteres", "error");
+    if (!isValidPassword(password)) {
+      return notify("La contraseña debe tener mínimo 6 caracteres", "error");
+    }
 
     try {
       const res = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // credentials: "include",
         body: JSON.stringify({ name, email, password, role })
       });
+
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -123,12 +131,10 @@
         );
       }
 
-      if (data.token) setToken(data.token);
-      if (data.user) setCurrentUser(data.user);
+      setToken(data.token);
+      setCurrentUser(data.user);
 
       notify("Cuenta creada", "success");
-
-      // ➜ Después de registrarse, llévalo directo al dashboard
       window.location.href = "../dashboard/dashboard.html";
     } catch (err) {
       console.error(err);
@@ -143,9 +149,8 @@
     $("#showLogin")?.addEventListener("click", showLogin);
   }
 
-  // ===== Init =====
+  // ================= Init =================
   document.addEventListener("DOMContentLoaded", () => {
-    // si ya hay sesión, ir directo al dashboard
     const current = getCurrentUser();
     if (current?.email && getToken()) {
       window.location.href = "../dashboard/dashboard.html";
@@ -154,4 +159,3 @@
     bindEvents();
   });
 })();
-
