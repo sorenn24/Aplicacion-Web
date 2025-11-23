@@ -1,108 +1,261 @@
 /* ==========================================
    ESTILO UNIFICADO PARA MEDIHOM (Dashboard)
-   Inspirado en la paleta del Home
+   Inspirado en la paleta del Home + holo suave
    ========================================== */
 
 body {
-    box-sizing: border-box;
-    background: #f1f5f9; /* gris azulado clarito */
-    scroll-behavior: smooth;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  position: relative;
+  min-height: 100vh;
+
+  /* Fondo base degradado claro */
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.16), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.18), transparent 55%),
+    linear-gradient(135deg, #e0f2fe 0%, #eef2ff 40%, #f9fafb 100%);
 }
 
-/* Fondo de secciones con gradient tipo Home */
+/* Capa holográfica suave en TODO el dashboard */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 8% 12%;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.28), transparent 60%),
+    conic-gradient(
+      from 0deg,
+      rgba(79, 70, 229, 0.0),
+      rgba(79, 70, 229, 0.8),
+      rgba(45, 212, 191, 0.0),
+      rgba(236, 72, 153, 0.8),
+      rgba(79, 70, 229, 0.0)
+    );
+  mix-blend-mode: screen;
+  filter: blur(16px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: -1;
+  animation: dashHoloSpin 26s linear infinite;
+}
+
+/* Partículas / puntos leves en el fondo */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(248, 250, 252, 0.25) 0, transparent 45%),
+    radial-gradient(circle at 82% 30%, rgba(248, 250, 252, 0.30) 0, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(248, 250, 252, 0.22) 0, transparent 55%);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: -1;
+  animation: dashDots 20s ease-in-out infinite alternate;
+}
+
+/* Fondo de secciones con gradient tipo Home (si usas esta clase en algún contenedor) */
 .gradient-bg {
-    background: linear-gradient(135deg, #22d3ee 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #22d3ee 0%, #4f46e5 100%);
+  color: #f9fafb;
 }
 
-/* Tarjetas */
+/* ==========================
+   TARJETAS / CONTENEDORES
+   ========================== */
+
+/* Tarjetas “principales” del dashboard */
 .card-minimal {
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 0.75rem;
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(12px);
+  transform-style: preserve-3d;
 }
 
 .card-minimal:hover {
-    border-color: #38bdf8;
-    box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35);
-    transform: translateY(-2px);
+  border-color: #38bdf8;
+  box-shadow: 0 18px 40px rgba(56, 189, 248, 0.35);
+  transform: translateY(-4px) rotateX(3deg) rotateY(-2deg);
 }
 
 /* Cards de ejercicios */
 .exercise-card {
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 0.9rem;
+  padding: 1rem 1.25rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(8px);
 }
 
 .exercise-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 14px 32px rgba(59, 130, 246, 0.32);
+  border-color: #3b82f6;
 }
 
-/* Barra de progreso */
+/* Pequeña pastilla para etiquetas dentro de cards (si las usas) */
+.exercise-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+}
+
+/* ==========================
+   BARRA DE PROGRESO
+   ========================== */
+.progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.3);
+  overflow: hidden;
+}
+
 .progress-bar {
-    background: linear-gradient(90deg, #22d3ee, #3b82f6);
-    height: 8px;
-    border-radius: 999px;
-    transition: width 0.4s ease;
+  background: linear-gradient(90deg, #22d3ee, #3b82f6);
+  height: 8px;
+  border-radius: 999px;
+  transition: width 0.4s ease;
 }
 
-/* Botones tipo minimal pero en gama azul */
+/* ==========================
+   BOTONES
+   ========================== */
+
 .minimal-button {
-    border: 1px solid #e5e7eb;
-    background: #ffffff;
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-    font-weight: 500;
-    transition: all 0.25s ease;
+  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.55rem 1.2rem;
+  border-radius: 0.85rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #0f172a;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .minimal-button:hover {
-    border-color: #38bdf8;
-    background-color: #ecfeff;
-    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+  border-color: #38bdf8;
+  background-color: #ecfeff;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+  transform: translateY(-1px);
 }
 
-/* Inputs */
+/* Variante primaria (por si la aplicas con una clase extra) */
+.minimal-button.primary {
+  background: linear-gradient(135deg, #22d3ee, #3b82f6);
+  color: white;
+  border-color: transparent;
+}
+
+.minimal-button.primary:hover {
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.6);
+}
+
+/* ==========================
+   INPUTS
+   ========================== */
+
 .minimal-input {
-    border: 1px solid #cbd5e1;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.6rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .minimal-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
-    outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.9);
+  outline: none;
+  background: #ffffff;
 }
 
-/* Notificaciones */
+/* ==========================
+   NOTIFICACIONES
+   ========================== */
+
 .notification {
-    animation: slideIn 0.3s ease;
-    background: linear-gradient(90deg, #3b82f6, #22d3ee);
-    color: white;
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
+  animation: slideIn 0.3s ease;
+  background: linear-gradient(120deg, #3b82f6, #22d3ee);
+  color: white;
+  padding: 0.8rem 1.1rem;
+  border-radius: 0.9rem;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+  font-size: 0.85rem;
 }
 
-/* Animación */
 @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-/* Contenedor de gráfica */
+/* ==========================
+   GRÁFICA
+   ========================== */
+
 .chart-container {
-    position: relative;
-    height: 300px;
+  position: relative;
+  height: 300px;
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  backdrop-filter: blur(6px);
 }
 
-/* Utilidad */
+/* ==========================
+   UTILIDADES
+   ========================== */
+
 .hidden {
-    display: none !important;
+  display: none !important;
+}
+
+/* Animaciones de fondo del dashboard */
+@keyframes dashHoloSpin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.04);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes dashDots {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-20px, -14px, 0);
+  }
+  100% {
+    transform: translate3d(18px, 12px, 0);
+  }
 }
