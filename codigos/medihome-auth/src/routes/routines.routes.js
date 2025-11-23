@@ -6,8 +6,8 @@ const CustomRoutine = require("../models/customRoutine.model");
 const router = express.Router();
 
 // ======================= CATÁLOGO BASE =======================
-const BASE_ROUTINES = [
- export const BASE_ROUTINES = [
+
+ const BASE_ROUTINES = [
   {
     id: "rtn-knee",
     name: "Rehabilitación de Rodilla",
