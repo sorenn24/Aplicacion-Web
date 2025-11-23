@@ -9,6 +9,137 @@
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
   // ============================
+  // IMÁGENES DE EJERCICIOS (web)
+  // ============================
+  // Las imágenes deben estar en: dashboard/img/*.png
+  const IMAGES = {
+    // Rodilla
+    knee_flex_ext: "img/knee_flex_ext.png",
+    leg_raise: "img/leg_raise.png",
+    quad_set: "img/quad_set.png",
+
+    // Cuello
+    neck_tilt: "img/neck_tilt.png",
+    neck_rotation: "img/neck_rotation.png",
+    neck_retraction: "img/neck_retraction.png",
+
+    // Codo
+    elbow_flex: "img/elbow_flex.png",
+    pronation_supination: "img/pronation_supination.png",
+    grip_isometric: "img/grip_isometric.png",
+
+    // Hombro
+    shoulder_raise: "img/shoulder_raise.png",
+    rotator_cuff: "img/rotator_cuff.png",
+    pendulum: "img/pendulum.png",
+
+    // Espalda baja
+    knees_to_chest: "img/knees_to_chest.png",
+    cat_cow: "img/cat_cow.png",
+    hip_bridge: "img/hip_bridge.png",
+
+    // Abdominales
+    bracing: "img/bracing.png",
+    dead_bug: "img/dead_bug.png",
+    plank_mod: "img/plank_mod.png",
+
+    // Cadera
+    side_leg_raise: "img/side_leg_raise.png",
+    single_leg_bridge: "img/single_leg_bridge.png",
+    side_steps: "img/side_steps.png",
+
+    // Tobillo
+    ankle_alphabet: "img/ankle_alphabet.png",
+    calf_raise: "img/calf_raise.png",
+    ankle_band: "img/ankle_band.png",
+
+    // Muñeca
+    wrist_curl: "img/wrist_curl.png",
+    wrist_rotation: "img/wrist_rotation.png",
+    wrist_stretch: "img/wrist_stretch.png",
+
+    // Torácica
+    thoracic_rotation: "img/thoracic_rotation.png",
+    thoracic_extension: "img/thoracic_extension.png",
+    open_book: "img/open_book.png",
+  };
+
+  // Mapea el nombre del ejercicio (texto) a la imagen correspondiente
+  function getExerciseImageByName(name = "") {
+    const n = name.toLowerCase();
+
+    // Rodilla
+    if (n.includes("flexión y extensión") || n.includes("flexion y extension"))
+      return IMAGES.knee_flex_ext;
+    if (n.includes("elevación de pierna recta") || n.includes("elevacion de pierna recta"))
+      return IMAGES.leg_raise;
+    if (n.includes("cuádriceps isométrico") || n.includes("cuadriceps isometrico"))
+      return IMAGES.quad_set;
+
+    // Cuello
+    if (n.includes("inclinaciones laterales")) return IMAGES.neck_tilt;
+    if (n.includes("rotaciones controladas")) return IMAGES.neck_rotation;
+    if (n.includes("retracciones cervicales") || n.includes("isometría cervical"))
+      return IMAGES.neck_retraction;
+
+    // Codo
+    if (n.includes("flexo-extensión") || n.includes("flexo extension"))
+      return IMAGES.elbow_flex;
+    if (n.includes("pronosupinación") || n.includes("pronosupinacion"))
+      return IMAGES.pronation_supination;
+    if (n.includes("agarre isométrico") || n.includes("agarre isometrico"))
+      return IMAGES.grip_isometric;
+
+    // Hombro
+    if (n.includes("elevaciones frontales")) return IMAGES.shoulder_raise;
+    if (n.includes("rotación externa") || n.includes("rotacion externa"))
+      return IMAGES.rotator_cuff;
+    if (n.includes("péndulo") || n.includes("pendulo")) return IMAGES.pendulum;
+
+    // Espalda baja
+    if (n.includes("rodillas al pecho")) return IMAGES.knees_to_chest;
+    if (n.includes("gato") || n.includes("camello")) return IMAGES.cat_cow;
+    if (n.includes("puente glúteo") || n.includes("puente gluteo"))
+      return IMAGES.hip_bridge;
+
+    // Abdominales
+    if (n.includes("activación transverso") || n.includes("activacion transverso"))
+      return IMAGES.bracing;
+    if (n.includes("dead bug")) return IMAGES.dead_bug;
+    if (n.includes("plancha modificada")) return IMAGES.plank_mod;
+
+    // Cadera
+    if (n.includes("abducción lateral") || n.includes("abduccion lateral"))
+      return IMAGES.side_leg_raise;
+    if (n.includes("puente una pierna")) return IMAGES.single_leg_bridge;
+    if (n.includes("paso lateral con banda")) return IMAGES.side_steps;
+
+    // Tobillo
+    if (n.includes("abecedario con pie")) return IMAGES.ankle_alphabet;
+    if (n.includes("elevación de talones") || n.includes("elevacion de talones"))
+      return IMAGES.calf_raise;
+    if (n.includes("inversión/eversión") || n.includes("inversion/eversion"))
+      return IMAGES.ankle_band;
+
+    // Muñeca
+    if (n.includes("flex/ext con mancuerna")) return IMAGES.wrist_curl;
+    if (n.includes("pronosupinación martillo") || n.includes("pronosupinacion martillo"))
+      return IMAGES.wrist_rotation;
+    if (n.includes("estiramiento flexor") || n.includes("estiramiento ext"))
+      return IMAGES.wrist_stretch;
+
+    // Torácica
+    if (n.includes("rotación en cuadrupedia") || n.includes("rotacion en cuadrupedia"))
+      return IMAGES.thoracic_rotation;
+    if (n.includes("extensión sobre foam") || n.includes("extension sobre foam"))
+      return IMAGES.thoracic_extension;
+    if (n.includes("aperturas de libro") || n.includes("libro"))
+      return IMAGES.open_book;
+
+    return null;
+  }
+
+  // ============================
   // Notificaciones
   // ============================
   function notify(msg, type = "info") {
@@ -420,6 +551,19 @@
       ul.appendChild(li);
     });
 
+    // 🔹 Imagen del ejercicio (como en la app)
+    const imgEl = $("#exerciseImage");
+    if (imgEl) {
+      const imgSrc = getExerciseImageByName(d.name || "");
+      if (imgSrc) {
+        imgEl.src = imgSrc;
+        imgEl.alt = d.name || "Ejercicio de rehabilitación";
+        imgEl.classList.remove("hidden");
+      } else {
+        imgEl.classList.add("hidden");
+      }
+    }
+
     scr.dataset.routineId = routine.id;
     scr.dataset.dayIndex = String(dayIndex);
 
@@ -445,11 +589,20 @@
 
     (routine.days || []).forEach((d, i) => {
       const doneIcon = daysDone[i] ? "✅" : "⬜";
+      const imgSrc = getExerciseImageByName(d.name || "");
+      const thumbHtml = imgSrc
+        ? `<img src="${imgSrc}" alt="${d.name || ""}" class="w-12 h-12 rounded-md object-contain bg-slate-100" />`
+        : "";
+
       const div = document.createElement("div");
       div.className = "p-3 bg-gray-50 rounded";
-      div.innerHTML = `<strong>${doneIcon} Día ${i + 1}:</strong> ${
-        d.name
-      } — ${d.reps} (${d.duration} min)`;
+      div.innerHTML = `
+        <div class="flex items-center gap-3">
+          ${thumbHtml}
+          <div>
+            <strong>${doneIcon} Día ${i + 1}:</strong> ${d.name} — ${d.reps} (${d.duration} min)
+          </div>
+        </div>`;
       list.appendChild(div);
     });
 
@@ -477,8 +630,10 @@
         const rec = progressMap[r.id];
         if (!rec) return false;
         if (Array.isArray(rec.daysDone))
-          return rec.daysDone.length &&
-            rec.daysDone.every((v) => v === true || v === 1);
+          return (
+            rec.daysDone.length &&
+            rec.daysDone.every((v) => v === true || v === 1)
+          );
         return false;
       }).length;
 
@@ -888,4 +1043,5 @@
     );
   });
 })();
+
 
