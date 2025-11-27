@@ -9,10 +9,11 @@
   "theme_color": "#6366F1",
   "icons": [
     {
-      "src": "/integradora/home/logo.png",
+      "src": "./logo.png",
       "sizes": "192x192",
       "type": "image/png"
     }
    
   ]
 }
+
